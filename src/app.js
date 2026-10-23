@@ -10,7 +10,8 @@
   const STORE_KEY = 'moblet-forge/project/v1';
   const CREATOR_DEFAULT = 'นริสันต์ นาคะเกศ (Narisan Nakakes)';
   const ARROWS = ['↑', '→', '↓', '←'];
-  const TOOL_ORDER = ['#', '.', 'S', 'B', 'e', 'x', 'k', 'G', 'w'];
+  const TOOL_ORDER = ['#', '.', 'S', 'B', 'e', 'x', 'k', 'G', 'w', 'm'];
+  const QUEST_KEY = 'moblet-forge/quests/v1';
 
   // ---------------------------------------------------------------- project
   const cloneLevel = (l) => ({ name: l.name || 'ด่าน', note: l.note || '', w: l.w, h: l.h, grid: l.grid.slice(), maxSteps: l.maxSteps || 0 });
@@ -47,7 +48,7 @@
   }
   let saveTimer = 0;
   function save() {
-    if (EMBED) return;
+    if (EMBED || S.quest) return; // quest maps never overwrite the creator's project
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
       try { const { brain, ...rest } = project; localStorage.setItem(STORE_KEY, JSON.stringify(rest)); } catch (e) { /* storage unavailable */ }
@@ -115,7 +116,7 @@
     P = {
       floorA: v('--floor-a'), floorB: v('--floor-b'), wall: v('--wall'), wallHi: v('--wall-hi'), beacon: v('--beacon'),
       ember: v('--ember'), emberDark: v('--ember-dark'), thorn: v('--thorn'), key: v('--key'), gateBg: v('--gate-bg'),
-      wind: v('--wind'), accent: v('--accent'), ink: v('--ink'), muted: v('--muted'), bg: v('--bg'), line: v('--line'), good: v('--good'),
+      wind: v('--wind'), mud: v('--mud'), mudHi: v('--mud-hi'), star: v('--star'), accent: v('--accent'), ink: v('--ink'), muted: v('--muted'), bg: v('--bg'), line: v('--line'), good: v('--good'),
     };
   }
   readPalette();
@@ -300,9 +301,11 @@
 
   // ---------------------------------------------------------------- tabs
   function setTab(tab) {
+    if (S.quest && tab !== 'quest') leaveQuest();
     S.tab = tab;
     $$('.tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
     $$('.pane').forEach((p) => (p.hidden = p.dataset.pane !== tab));
+    if (tab === 'quest') { enterQuest(S.questId || MF.QUESTS[0].id); return; }
     if (tab === 'play') startPlay();
     else if (S.mode === 'play') setIdle();
     else if (S.mode === 'idle') setChip(tab === 'build' ? 'โหมดสร้างด่าน' : 'พร้อม', '');
@@ -414,10 +417,10 @@
   function opts(obj, sel) {
     return Object.entries(obj).map(([k, v]) => `<option value="${k}"${k === sel ? ' selected' : ''}>${v}</option>`).join('');
   }
-  function renderRules() {
-    const box = $('#rules');
+  // Rule cards: "เมื่อ [event] [condition] ให้ คะแนน [n] [จบรอบ] [นับว่าชนะ]"
+  function renderRuleList(box, rules, onChange, prefix) {
     box.innerHTML = '';
-    project.rules.forEach((r, idx) => {
+    rules.forEach((r, idx) => {
       const el = document.createElement('div');
       el.className = 'rule' + (r.on ? '' : ' off');
       el.innerHTML =
@@ -430,17 +433,20 @@
         `<label><input type="checkbox" data-k="end"${r.end ? ' checked' : ''}> จบรอบ</label>` +
         `<label><input type="checkbox" data-k="win"${r.win ? ' checked' : ''}> นับว่าชนะ</label></div>`;
       el.querySelectorAll('[data-k]').forEach((inp) => {
-        inp.id = `rule-${r.id}-${inp.dataset.k}`;
-        inp.addEventListener('change', () => {
+        inp.id = `${prefix || 'rule'}-${r.id}-${inp.dataset.k}`;
+        inp.addEventListener(inp.dataset.k === 'reward' ? 'input' : 'change', () => {
           const k = inp.dataset.k;
           r[k] = inp.type === 'checkbox' ? inp.checked : k === 'reward' ? Number(inp.value) || 0 : inp.value;
           if (k === 'on') el.classList.toggle('off', !r.on);
-          rebuild(); save();
+          onChange(false);
         });
       });
-      el.querySelector('.del').addEventListener('click', () => { project.rules.splice(idx, 1); renderRules(); rebuild(); save(); });
+      el.querySelector('.del').addEventListener('click', () => { rules.splice(idx, 1); onChange(true); });
       box.appendChild(el);
     });
+  }
+  function renderRules() {
+    renderRuleList($('#rules'), project.rules, (structural) => { if (structural) renderRules(); rebuild(); save(); });
   }
   $('#addRule').addEventListener('click', () => {
     project.rules.push({ id: 'r' + Date.now().toString(36), on: true, when: 'touch_ember', cond: 'always', reward: 0.2, end: false, win: false });
@@ -590,11 +596,11 @@
   window.addEventListener('resize', drawChart);
 
   // ---------------------------------------------------------------- watch AI
-  function startWatch() {
+  function startWatch(given) {
     if (S.training) S.training = false;
-    if (S.brain.episodes === 0) { toast('ยังไม่ได้ฝึกเลย กด "เริ่มฝึก" ก่อน'); return; }
+    if (!given && S.brain.episodes === 0) { toast('ยังไม่ได้ฝึกเลย กด "เริ่มฝึก" ก่อน'); return; }
     if (S.mode === 'play') S.play = null;
-    const roll = S.brain.rollout(S.world.clone());
+    const roll = given || S.brain.rollout(S.world.clone());
     const w = S.world.clone();
     S.mode = 'watch';
     S.focus = w;
@@ -609,7 +615,8 @@
     if (W.idx >= W.path.length - 1) {
       if (!W.ended) {
         W.ended = true;
-        setChip(W.won ? 'AI ผ่านด่าน!' : 'AI ยังไม่ผ่าน', W.won ? 'win' : 'lose');
+        if (W.onEnd) W.onEnd();
+        else setChip(W.won ? 'AI ผ่านด่าน!' : 'AI ยังไม่ผ่าน', W.won ? 'win' : 'lose');
       }
       return;
     }
@@ -749,6 +756,165 @@
     rd.onload = () => importProject(String(rd.result));
     rd.readAsText(f);
   });
+
+
+  // ---------------------------------------------------------------- coach quests (โหมดครูฝึก)
+  // Game-mode design: Narisan Nakakes. The coach writes rewards; the grader trains a
+  // fresh brain with a fixed seed and judges the result against the quest's own goal.
+  let questSaves = {};
+  try { questSaves = JSON.parse(localStorage.getItem(QUEST_KEY) || '{}') || {}; } catch (e) { questSaves = {}; }
+  const saveQuests = () => { try { localStorage.setItem(QUEST_KEY, JSON.stringify(questSaves)); } catch (e) { /* storage unavailable */ } };
+  const starsHtml = (n) => [0, 1, 2].map((i) => `<span class="${i < n ? 'on' : ''}">★</span>`).join('');
+  const condLabel = (c) => (c === 'always' ? '' : ' ' + MF.CONDITIONS[c]);
+
+  function goalLines(q) {
+    const g = q.goal, out = [];
+    if (g.beacon) out.push('ถึงตะเกียงเส้นชัย');
+    if (g.allEmbers) out.push('เก็บถ่านไฟครบทุกก้อนก่อนถึงตะเกียง');
+    if (g.noThorn) out.push('ไม่เหยียบหนามเลยสักครั้ง');
+    if (g.noBump) out.push('ไม่ชนกำแพงหรือประตูเลย');
+    if (g.maxSteps === 'optimal') out.push(`ใช้ก้าวไม่เกินทางที่สั้นที่สุด (${MF.optimalSteps(q.level, g)} ก้าว)`);
+    else if (g.maxSteps) out.push(`ใช้ไม่เกิน ${g.maxSteps} ก้าว`);
+    if (g.trials) out.push(`ผ่านอย่างน้อย ${Math.round(g.trials * g.passRate)} จาก ${g.trials} รอบทดสอบ (โลกมีความสุ่ม)`);
+    out.push(`ฝึกได้ไม่เกิน ${q.episodes.toLocaleString('th-TH')} รอบ · ★★ ภายใน ${q.par[0]} รอบ · ★★★ ภายใน ${q.par[1]} รอบ`);
+    return out;
+  }
+
+  function enterQuest(id) {
+    const q = MF.QUESTS.find((x) => x.id === id) || MF.QUESTS[0];
+    if (!S.quest) S.creator = { project, brain: S.brain };
+    S.training = false;
+    S.questId = q.id;
+    const saved = questSaves[q.id] || {};
+    const rules = (saved.rules || q.starter).map((r) => Object.assign({}, r, { locked: false }));
+    S.quest = { q, rules, algo: saved.algo || 'q', run: null, lastRoll: null };
+    project = {
+      format: 'moblet-forge/1', title: q.title, creator: S.creator.project.creator, moblet: S.creator.project.moblet,
+      level: cloneLevel(q.level), rules: q.locked.concat(rules), hyper: Object.assign({}, MF.DEFAULT_HYPER),
+    };
+    S.brain = null;
+    sizeBoard(); rebuild({ quiet: true });
+    $('#levelName').value = q.title;
+    $('#levelName').readOnly = true;
+    renderQuest();
+    setChip('โหมดครูฝึก', 'live');
+  }
+  function leaveQuest() {
+    if (S.quest && S.quest.run) S.quest.run.cancelled = true;
+    project = S.creator.project;
+    S.brain = S.creator.brain;
+    S.quest = null;
+    $('#levelName').readOnly = !!EMBED;
+    sizeBoard(); rebuild({ quiet: true }); fillBuildFields();
+  }
+  function syncQuestRules() {
+    const Q = S.quest;
+    project.rules = Q.q.locked.concat(Q.rules);
+    questSaves[Q.q.id] = Object.assign(questSaves[Q.q.id] || {}, { rules: Q.rules, algo: Q.algo });
+    saveQuests();
+    renderBudget();
+  }
+  function renderBudget() {
+    const Q = S.quest, q = Q.q;
+    const used = MF.budgetUsed(Q.rules), n = Q.rules.filter((r) => r.on).length;
+    const over = used > q.budget + 1e-9 || n > q.maxRules;
+    $('#questBudget').classList.toggle('over', over);
+    $('#questBudgetNum').textContent = `${used.toFixed(2)} / ${q.budget} · กฎ ${n}/${q.maxRules} ข้อ`;
+    $('#questBudgetBar').style.width = Math.min(100, (used / q.budget) * 100) + '%';
+    $('#questSubmit').disabled = over || !!(Q.run && !Q.run.done);
+  }
+  function renderQuestList() {
+    const box = $('#questList');
+    box.innerHTML = '';
+    MF.QUESTS.forEach((q, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'qbtn';
+      b.setAttribute('aria-pressed', String(S.quest && S.quest.q.id === q.id));
+      const st = (questSaves[q.id] && questSaves[q.id].stars) || 0;
+      b.innerHTML = `<small>ภารกิจ ${i + 1}</small><b>${q.title}</b><span class="stars" aria-label="${st} ดาว">${starsHtml(st)}</span>`;
+      b.addEventListener('click', () => enterQuest(q.id));
+      box.appendChild(b);
+    });
+  }
+  function renderQuest() {
+    const Q = S.quest, q = Q.q;
+    renderQuestList();
+    $('#questBrief').textContent = q.brief;
+    $('#questGoal').innerHTML = goalLines(q).map((t) => `<li>${t}</li>`).join('');
+    $('#questLocked').innerHTML = q.locked.map((r) =>
+      `<div><span>เมื่อ${MF.EVENTS[r.when]}${condLabel(r.cond)}${r.end ? ' → จบรอบ' : ''}${r.win ? ' (นับว่าชนะ)' : ''}</span><b>${r.reward ? (r.reward > 0 ? '+' : '') + r.reward : '0'}</b></div>`).join('');
+    renderRuleList($('#questRules'), Q.rules, (structural) => { if (structural) renderQuestRules(); syncQuestRules(); }, 'qrule');
+    $('#questAlgo').value = Q.algo;
+    $('#questVerdict').textContent = '';
+    $('#questVerdict').className = 'verdict';
+    $('#questHintText').hidden = true;
+    $('#questHintText').textContent = q.hint;
+    $('#questBar').style.width = '0';
+    $('#questReplay').disabled = true;
+    renderBudget();
+  }
+  function renderQuestRules() {
+    renderRuleList($('#questRules'), S.quest.rules, (structural) => { if (structural) renderQuestRules(); syncQuestRules(); }, 'qrule');
+  }
+  $('#questAddRule').addEventListener('click', () => {
+    S.quest.rules.push({ id: 'q' + Date.now().toString(36), on: true, when: 'every_step', cond: 'always', reward: 0, end: false, win: false });
+    renderQuestRules(); syncQuestRules();
+  });
+  $('#questAlgo').addEventListener('change', (e) => { S.quest.algo = e.target.value; syncQuestRules(); });
+  $('#questHint').addEventListener('click', () => { $('#questHintText').hidden = false; });
+  $('#questReplay').addEventListener('click', () => replayQuest());
+
+  function replayQuest() {
+    const Q = S.quest;
+    if (!Q || !Q.lastRoll) return;
+    startWatch(Q.lastRoll);
+    S.watch.onEnd = () => setChip(Q.lastPassed ? 'ผ่านภารกิจ' : 'ไม่ผ่านภารกิจ', Q.lastPassed ? 'win' : 'lose');
+  }
+  $('#questSubmit').addEventListener('click', () => {
+    const Q = S.quest;
+    if (!Q || (Q.run && !Q.run.done)) return;
+    setIdle();
+    const run = new MF.QuestRun(Q.q, Q.rules, Q.algo);
+    Q.run = run;
+    $('#questVerdict').textContent = 'กำลังฝึกสมองใหม่และตัดสิน…';
+    $('#questVerdict').className = 'verdict';
+    setChip('กำลังตัดสิน', 'live');
+    renderBudget();
+    const tick = () => {
+      if (run.cancelled) return;
+      run.step(14);
+      $('#questBar').style.width = (run.episodes / Q.q.episodes) * 100 + '%';
+      if (!run.done) { setTimeout(tick, 0); return; }
+      finishQuest(run);
+    };
+    tick();
+  });
+  function finishQuest(run) {
+    const Q = S.quest, r = run.result, q = Q.q;
+    S.brain = run.brain; // overlays now show the graded brain's thinking
+    Q.lastRoll = r.sample;
+    Q.lastPassed = r.passed;
+    $('#questBar').style.width = '0';
+    const v = $('#questVerdict');
+    if (r.passed) {
+      const prev = (questSaves[q.id] && questSaves[q.id].stars) || 0;
+      questSaves[q.id] = Object.assign(questSaves[q.id] || {}, { stars: Math.max(prev, r.stars) });
+      saveQuests();
+      v.innerHTML = `ผ่าน! <span class="stars">${starsHtml(r.stars)}</span> ฝึก ${r.episodes} รอบ · ใช้งบ ${r.used.toFixed(2)}/${q.budget}` +
+        (q.goal.trials ? ` · ผ่าน ${Math.round(r.rate * q.goal.trials)}/${q.goal.trials}` : '');
+      v.className = 'verdict win';
+      toast(r.stars === 3 ? 'สามดาว! ครูฝึกตัวจริง' : 'ผ่านแล้ว ลองให้ได้ดาวมากขึ้นด้วยการฝึกให้เร็วขึ้น');
+    } else {
+      v.textContent = 'ยังไม่ผ่าน: ' + (r.reason || 'ยังไม่ถึงเป้าหมาย') + (r.episodes ? ` (ฝึกครบ ${r.episodes} รอบ)` : '');
+      v.className = 'verdict lose';
+    }
+    renderQuestList();
+    renderBudget();
+    renderTrainStats();
+    if (r.sample) { $('#questReplay').disabled = false; replayQuest(); }
+    else setChip('ไม่ผ่านภารกิจ', 'lose');
+  }
 
   // ---------------------------------------------------------------- boot
   function fillAll() {

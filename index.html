@@ -35,6 +35,9 @@
   --key: #a8722a;
   --gate-bg: #b9a382;
   --wind: #5f80cf;
+  --mud: #8a6a45;
+  --mud-hi: #a98559;
+  --star: #d9971c;
   --f-display: "Mitr", "Noto Sans Thai", "Leelawadee UI", system-ui, sans-serif;
   --f-body: "IBM Plex Sans Thai", "Noto Sans Thai", "Leelawadee UI", system-ui, sans-serif;
   --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -45,14 +48,14 @@
     --bg: #101715; --surface: #172019; --surface-2: #1c2620; --ink: #e2e9dd; --muted: #96a59b; --line: #2c3832;
     --accent: #8099ff; --accent-soft: #232c52; --accent-ink: #0d1330; --ember: #f19a33; --good: #5fbf85; --bad: #f07a7a;
     --floor-a: #1d2823; --floor-b: #19231f; --wall: #3a4a43; --wall-hi: #485a52; --beacon: #e9b443; --ember-dark: #3a2312;
-    --thorn: #c9577d; --key: #d29a49; --gate-bg: #5a4d39; --wind: #7f9be6; color-scheme: dark;
+    --thorn: #c9577d; --key: #d29a49; --gate-bg: #5a4d39; --wind: #7f9be6; --mud: #5e4930; --mud-hi: #7a6143; --star: #f0b443; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #101715; --surface: #172019; --surface-2: #1c2620; --ink: #e2e9dd; --muted: #96a59b; --line: #2c3832;
   --accent: #8099ff; --accent-soft: #232c52; --accent-ink: #0d1330; --ember: #f19a33; --good: #5fbf85; --bad: #f07a7a;
   --floor-a: #1d2823; --floor-b: #19231f; --wall: #3a4a43; --wall-hi: #485a52; --beacon: #e9b443; --ember-dark: #3a2312;
-  --thorn: #c9577d; --key: #d29a49; --gate-bg: #5a4d39; --wind: #7f9be6; color-scheme: dark;
+  --thorn: #c9577d; --key: #d29a49; --gate-bg: #5a4d39; --wind: #7f9be6; --mud: #5e4930; --mud-hi: #7a6143; --star: #f0b443; color-scheme: dark;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -96,12 +99,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .legend i { display: inline-block; width: 56px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--thorn), transparent 50%, var(--accent)); }
 
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; min-width: 0; }
-.tabs { display: grid; grid-template-columns: repeat(6, 1fr); border-bottom: 1px solid var(--line); background: var(--surface-2); }
+.tabs { display: grid; grid-template-columns: repeat(7, 1fr); border-bottom: 1px solid var(--line); background: var(--surface-2); }
 .tabs button { border: 0; background: transparent; padding: 10px 2px 9px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 0.78rem; color: var(--muted); border-bottom: 2.5px solid transparent; }
 .tabs button span { font-family: var(--f-mono); font-size: 0.7rem; opacity: 0.7; }
 .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); background: var(--surface); }
 .embed .tabs { grid-template-columns: repeat(2, 1fr); }
-.embed .tabs [data-tab="build"], .embed .tabs [data-tab="rules"], .embed .tabs [data-tab="moblet"], .embed .tabs [data-tab="share"], .embed .creator-only { display: none; }
+.embed .tabs [data-tab="build"], .embed .tabs [data-tab="rules"], .embed .tabs [data-tab="quest"], .embed .tabs [data-tab="moblet"], .embed .tabs [data-tab="share"], .embed .creator-only { display: none; }
 .pane { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
 .pane h2 { font-size: 1.12rem; }
 .pane p.lead { margin: -6px 0 0; color: var(--muted); font-size: 0.88rem; }
@@ -163,6 +166,31 @@ input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px;
 
 .toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--bg); padding: 9px 16px; border-radius: 10px; font-size: 0.88rem; opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; max-width: calc(100% - 32px); z-index: 20; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.tabs .tab-quest { color: var(--star); }
+.tabs .tab-quest span { opacity: 1; }
+.quest-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.qbtn { border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 7px 8px; cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.qbtn b { font-family: var(--f-display); font-weight: 500; font-size: 0.84rem; line-height: 1.25; }
+.qbtn small { font-size: 0.72rem; color: var(--muted); }
+.qbtn[aria-pressed="true"] { border-color: var(--star); box-shadow: inset 0 0 0 1px var(--star); }
+.stars { font-size: 0.86rem; letter-spacing: 0.08em; color: var(--line); }
+.stars .on { color: var(--star); }
+.brief { margin: 0; font-size: 0.92rem; }
+.goal-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; font-size: 0.86rem; }
+.goal-list li { display: flex; gap: 8px; align-items: baseline; }
+.goal-list li::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 2px; background: var(--star); transform: translateY(-1px); }
+.locked-list { display: flex; flex-direction: column; gap: 4px; font-size: 0.82rem; color: var(--muted); }
+.locked-list div { background: var(--surface-2); border-radius: 8px; padding: 5px 9px; display: flex; justify-content: space-between; gap: 8px; }
+.locked-list b { font-family: var(--f-mono); color: var(--ink); font-weight: 600; }
+.budget { display: flex; flex-direction: column; gap: 4px; font-size: 0.82rem; color: var(--muted); }
+.budget .bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.budget .bar i { display: block; height: 100%; background: var(--good); width: 0; }
+.budget.over .bar i { background: var(--bad); }
+.budget.over { color: var(--bad); }
+.budget b { font-family: var(--f-mono); color: var(--ink); }
+.verdict { margin: 0; font-family: var(--f-display); font-size: 1rem; min-height: 1.4em; }
+.verdict.win { color: var(--good); } .verdict.lose { color: var(--bad); }
+@media (max-width: 460px) { .quest-list { grid-template-columns: repeat(2, 1fr); } .tabs button { font-size: 0.7rem; } }
 footer { font-size: 0.8rem; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 18px; border-top: 1px solid var(--line); padding-top: 12px; }
 footer a { color: var(--accent); }
 @media (prefers-reduced-motion: reduce) { .toast, .progress i { transition: none; } }
@@ -210,6 +238,7 @@ footer a { color: var(--accent); }
         <button role="tab" data-tab="train" aria-selected="false"><span>04</span>ฝึก AI</button>
         <button role="tab" data-tab="play" aria-selected="false"><span>05</span>เล่น</button>
         <button role="tab" data-tab="share" aria-selected="false"><span>06</span>แชร์</button>
+        <button role="tab" data-tab="quest" aria-selected="false" class="tab-quest"><span>โหมด</span>ครูฝึก</button>
       </nav>
 
       <div class="pane" data-pane="build">
@@ -325,11 +354,34 @@ footer a { color: var(--accent); }
           <div class="row"><button class="btn" id="importBtn">นำเข้าจากข้อความ</button></div>
         </div>
       </div>
+
+      <div class="pane" data-pane="quest" hidden>
+        <h2>ภารกิจครูฝึก</h2>
+        <p class="lead">คุณบังคับโมบเล็ตเองไม่ได้ ทำได้แค่ตั้งกฎให้คะแนนภายในงบที่จำกัด แล้วส่งตรวจ ระบบจะฝึกสมองใหม่ด้วยค่าสุ่มคงที่ และตัดสินจากเป้าหมายของภารกิจ ไม่ใช่จากคะแนนที่คุณตั้ง</p>
+        <div class="quest-list" id="questList"></div>
+        <p class="brief" id="questBrief"></p>
+        <div class="field"><span>เป้าหมายที่ใช้ตัดสิน</span><ul class="goal-list" id="questGoal"></ul></div>
+        <div class="field"><span>กฎที่ล็อกไว้ (แก้ไม่ได้)</span><div class="locked-list" id="questLocked"></div></div>
+        <div class="field"><span>กฎของคุณ</span><div class="rules" id="questRules"></div></div>
+        <div class="row">
+          <button class="btn" id="questAddRule">+ เพิ่มกฎ</button>
+          <label class="row">วิธีเรียนรู้ <select id="questAlgo" style="width:auto"><option value="q">Q-learning</option><option value="sarsa">SARSA</option></select></label>
+        </div>
+        <div class="budget" id="questBudget"><div class="row" style="justify-content:space-between"><span>งบคะแนนที่ใช้</span><span><b id="questBudgetNum">0</b></span></div><div class="bar"><i id="questBudgetBar"></i></div></div>
+        <div class="row">
+          <button class="btn primary" id="questSubmit">ส่งตรวจ</button>
+          <button class="btn ghost" id="questHint">ขอคำใบ้</button>
+          <button class="btn ghost" id="questReplay" disabled>ดูรอบตัดสินอีกครั้ง</button>
+        </div>
+        <div class="progress" aria-hidden="true"><i id="questBar"></i></div>
+        <p class="verdict" id="questVerdict"></p>
+        <p class="hint" id="questHintText" hidden></p>
+      </div>
     </aside>
   </main>
 
   <footer>
-    <span>Moblet Forge · สร้างและออกแบบโดย <b>นริสันต์ นาคะเกศ</b> (Narisan Nakakes) · MIT License</span>
+    <span>Moblet Forge · สร้าง ออกแบบเกม และคิดโหมดครูฝึกโดย <b>นริสันต์ นาคะเกศ</b> (Narisan Nakakes) · MIT License</span>
     <a href="https://github.com/narisunt-ctrl/moblet-forge" target="_blank" rel="noopener">github.com/narisunt-ctrl/moblet-forge</a>
   </footer>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -355,7 +407,21 @@ footer a { color: var(--accent); }
     'k': { id: 'key', th: 'กุญแจ', solid: false },
     'G': { id: 'gate', th: 'ประตูกุญแจ', solid: false },
     'w': { id: 'wind', th: 'ลมพัด', solid: false },
+    'm': { id: 'mud', th: 'โคลนลื่น', solid: false },
   };
+  const SLIP_CHANCE = 0.4; // chance a step taken from mud goes in a random direction
+
+  // Small seeded PRNG so worlds and training runs can be reproduced
+  function mulberry32(seed) {
+    let a = seed >>> 0;
+    return function () {
+      a = (a + 0x6d2b79f5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
   const MAX_EMBERS = 8;
 
   // Events a rule can listen to
@@ -368,6 +434,7 @@ footer a { color: var(--accent); }
     touch_thorn: 'เหยียบหนาม',
     reach_beacon: 'ถึงตะเกียงเส้นชัย',
     blown: 'โดนลมพัด',
+    slip: 'ลื่นโคลน',
     timeout: 'หมดเวลา',
   };
   const CONDITIONS = {
@@ -392,8 +459,14 @@ footer a { color: var(--accent); }
   }
 
   class World {
-    constructor(level, rules) {
+    constructor(level, rules, seed) {
+      this.seed = seed == null ? 99 : seed;
+      this.rand = mulberry32(this.seed);
       this.load(level, rules);
+    }
+    reseed(seed) {
+      this.seed = seed;
+      this.rand = mulberry32(seed);
     }
     load(level, rules) {
       this.level = level;
@@ -469,6 +542,11 @@ footer a { color: var(--accent); }
     step(a) {
       if (this.done) return { s: this.state(), r: 0, done: true, events: [] };
       const events = ['every_step'];
+      // Mud is a "behavior" tile: it may override the chosen action (stochastic world)
+      if (this.grid[this.pos] === 'm' && this.rand() < SLIP_CHANCE) {
+        a = (this.rand() * 4) | 0;
+        events.push('slip');
+      }
       const [dx, dy] = DIRS[a];
       let x = this.pos % this.w, y = (this.pos / this.w) | 0;
       if (this._blocked(x + dx, y + dy)) events.push('bump_wall');
@@ -504,8 +582,8 @@ footer a { color: var(--accent); }
       this.ret += r;
       return { s: this.state(), r, done: this.done, events };
     }
-    clone() {
-      return new World(this.level, this.rules);
+    clone(seed) {
+      return new World(this.level, this.rules, seed == null ? this.seed : seed);
     }
   }
 
@@ -545,6 +623,8 @@ footer a { color: var(--accent); }
   MF.DIRS = DIRS;
   MF.MAX_EMBERS = MAX_EMBERS;
   MF.World = World;
+  MF.mulberry32 = mulberry32;
+  MF.SLIP_CHANCE = SLIP_CHANCE;
   MF.defaultRules = defaultRules;
   MF.blankLevel = blankLevel;
   MF.setTile = setTile;
@@ -560,17 +640,7 @@ footer a { color: var(--accent); }
   'use strict';
   const MF = (g.MF = g.MF || {});
 
-  // Small seeded PRNG so a training run can be reproduced
-  function mulberry32(seed) {
-    let a = seed >>> 0;
-    return function () {
-      a = (a + 0x6d2b79f5) >>> 0;
-      let t = a;
-      t = Math.imul(t ^ (t >>> 15), t | 1);
-      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  }
+  const mulberry32 = MF.mulberry32; // defined in engine.js
 
   const DEFAULT_HYPER = {
     algo: 'q',          // 'q' = Q-learning (off-policy), 'sarsa' = on-policy
@@ -638,12 +708,20 @@ footer a { color: var(--accent); }
     }
 
     // Greedy rollout without learning; returns the visited positions
-    rollout(world, maxSteps) {
+    // Deterministic argmax: ties go to the lowest action index (used for grading)
+    argmax(s) {
+      const b = s * 4, Q = this.Q;
+      let a = 0;
+      for (let i = 1; i < 4; i++) if (Q[b + i] > Q[b + a] + 1e-9) a = i;
+      return a;
+    }
+    rollout(world, maxSteps, deterministic) {
       world.reset();
       const path = [{ pos: world.pos, hasKey: 0, mask: 0, events: [] }];
       const limit = maxSteps || world.maxSteps;
       while (!world.done && path.length <= limit) {
-        const st = world.step(this.greedy(world.state()));
+        const s0 = world.state();
+        const st = world.step(deterministic ? this.argmax(s0) : this.greedy(s0));
         path.push({ pos: world.pos, hasKey: world.hasKey, mask: world.mask, events: st.events });
       }
       return { path, won: world.won, ret: world.ret };
@@ -675,7 +753,6 @@ footer a { color: var(--accent); }
 
   MF.Brain = Brain;
   MF.DEFAULT_HYPER = DEFAULT_HYPER;
-  MF.mulberry32 = mulberry32;
 })(typeof window !== 'undefined' ? window : globalThis);
 </script>
 <script data-mf="levels">
@@ -733,6 +810,188 @@ footer a { color: var(--accent); }
       ],
     },
   ];
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+<script data-mf="quests">
+/* Moblet Forge — quests.js
+ * "ภารกิจครูฝึก" (Coach Quests): a reward-design puzzle mode.
+ * The player never moves the Moblet. They write reward rules within a budget,
+ * then the quest trains a fresh brain with a fixed seed and grades the trained
+ * Moblet against a hidden-from-the-reward objective.
+ * Game design: Narisan Nakakes (นริสันต์ นาคะเกศ). MIT License.
+ */
+(function (g) {
+  'use strict';
+  const MF = (g.MF = g.MF || {});
+
+  const END_AT_BEACON = { id: 'L1', on: true, when: 'reach_beacon', cond: 'always', reward: 0, end: true, win: true, locked: true };
+  const END_AT_TIMEOUT = { id: 'L2', on: true, when: 'timeout', cond: 'always', reward: 0, end: true, win: false, locked: true };
+  const starter = (when, cond) => ({ id: 'p' + when, on: true, when, cond: cond || 'always', reward: 0, end: false, win: false });
+
+  const QUESTS = [
+    {
+      id: 'q1', title: 'ก้าวแรกของครูฝึก',
+      brief: 'ให้โมบเล็ตเดินถึงตะเกียงเส้นชัย ตอนนี้มันไม่รู้เลยว่าตะเกียงดี ต้องบอกมันด้วยคะแนน',
+      goal: { beacon: true }, budget: 3, maxRules: 2, episodes: 400, checkpoint: 20, par: [100, 60],
+      level: { name: 'ก้าวแรกของครูฝึก', w: 8, h: 5, maxSteps: 40, grid: ['########', '#S....B#', '#.####.#', '#......#', '########'] },
+      locked: [END_AT_BEACON, END_AT_TIMEOUT], starter: [starter('reach_beacon')],
+      hint: 'ลองให้คะแนนบวกเมื่อถึงตะเกียง',
+    },
+    {
+      id: 'q2', title: 'อย่าเหยียบหนาม',
+      brief: 'ทางลัดมีหนามขวาง ให้โมบเล็ตถึงตะเกียงโดยไม่เหยียบหนามเลยสักครั้ง (หนามในด่านนี้ไม่ทำให้จบรอบ)',
+      goal: { beacon: true, noThorn: true }, budget: 4, maxRules: 3, episodes: 500, checkpoint: 20, par: [100, 40],
+      level: { name: 'อย่าเหยียบหนาม', w: 9, h: 5, maxSteps: 40, grid: ['#########', '#S..x..B#', '#.#####.#', '#.......#', '#########'] },
+      locked: [END_AT_BEACON, END_AT_TIMEOUT], starter: [starter('reach_beacon'), starter('touch_thorn')],
+      hint: 'ทางอ้อมแทบไม่เคยถูกสำรวจ โทษของหนามต้องหนักกว่ารางวัลของตะเกียง หรือลอง SARSA',
+    },
+    {
+      id: 'q3', title: 'นักสะสมถ่านไฟ',
+      brief: 'ตะเกียงจบรอบทันทีที่แตะ ให้โมบเล็ตเก็บถ่านไฟครบ 3 ก้อนก่อนไปแตะตะเกียง',
+      goal: { beacon: true, allEmbers: true }, budget: 5, maxRules: 4, episodes: 1500, checkpoint: 50, par: [300, 100],
+      level: { name: 'นักสะสมถ่านไฟ', w: 9, h: 7, maxSteps: 70, grid: ['#########', '#S.....e#', '#.#.###.#', '#e#..B#.#', '#.###.#.#', '#...e...#', '#########'] },
+      locked: [END_AT_BEACON, END_AT_TIMEOUT], starter: [starter('reach_beacon', 'all_embers'), starter('touch_ember')],
+      hint: 'เงื่อนไข "ถ้าเก็บถ่านไฟครบ" กับ "ถ้ายังไม่ครบ" ใช้คู่กันได้',
+    },
+    {
+      id: 'q4', title: 'ลมส่งตัว',
+      brief: 'ถ่านไฟด้านล่างให้คะแนนอยู่แล้ว (+0.5 ล็อกไว้) แต่ภารกิจคือถึงตะเกียงด้วยจำนวนก้าวน้อยที่สุดเท่าที่เป็นไปได้ ผ่านช่องลม',
+      goal: { beacon: true, maxSteps: 'optimal' }, budget: 5, maxRules: 3, episodes: 800, checkpoint: 25, par: [100, 25],
+      level: { name: 'ลมส่งตัว', w: 11, h: 5, maxSteps: 40, grid: ['###########', '#S.w.w.w.B#', '#.#######.#', '#.e.e.e.e.#', '###########'] },
+      locked: [END_AT_BEACON, END_AT_TIMEOUT, { id: 'L3', on: true, when: 'touch_ember', cond: 'always', reward: 0.5, end: false, win: false, locked: true }],
+      starter: [starter('reach_beacon'), starter('every_step')],
+      hint: 'ทางล่างได้ถ่านไฟ +2 แต่เดินเพิ่มหลายก้าว ค่าต่อก้าวต้องแพงพอ',
+    },
+    {
+      id: 'q5', title: 'สะพานโคลนลื่น',
+      brief: 'โคลนทำให้ก้าวพลาดไปทิศสุ่ม 40% ใต้โคลนคือแนวหนาม ต้องผ่านด่านโดยไม่เหยียบหนามอย่างน้อย 18 ใน 20 รอบทดสอบ',
+      goal: { beacon: true, noThorn: true, trials: 20, passRate: 0.9 }, budget: 4, maxRules: 3, episodes: 1500, checkpoint: 50, par: [250, 100],
+      level: { name: 'สะพานโคลนลื่น', w: 9, h: 7, maxSteps: 60, grid: ['#########', '#.......#', '#.#####.#', '#.#####.#', '#Smmmmm.#', '#xxxxxxB#', '#########'] },
+      locked: [END_AT_BEACON, END_AT_TIMEOUT], starter: [starter('reach_beacon'), starter('touch_thorn')],
+      hint: 'ลองเปลี่ยนวิธีเรียนรู้เป็น SARSA ที่ระวังตัวกว่า หรือทำให้หนามน่ากลัวกว่าความเร็ว',
+    },
+    {
+      id: 'q6', title: 'กุญแจทางไกล',
+      brief: 'โมบเล็ตตัวนี้ชอบเดินเล่น (ได้ +0.1 ทุกก้าว ล็อกไว้) ตะเกียงอยู่หลังประตูกุญแจ ให้ถึงตะเกียงด้วยก้าวน้อยที่สุด และห้ามชนกำแพงหรือประตูเลย',
+      goal: { beacon: true, maxSteps: 'optimal', noBump: true }, budget: 5, maxRules: 4, episodes: 1500, checkpoint: 50, par: [200, 50],
+      level: { name: 'กุญแจทางไกล', w: 9, h: 7, maxSteps: 60, grid: ['#########', '#S.....k#', '#.#####.#', '#.#B.G..#', '#.#####.#', '#.......#', '#########'] },
+      locked: [END_AT_BEACON, END_AT_TIMEOUT, { id: 'L4', on: true, when: 'every_step', cond: 'always', reward: 0.1, end: false, win: false, locked: true }],
+      starter: [starter('reach_beacon'), starter('every_step')],
+      hint: 'ความสุขจากการเดินเล่นต้องถูกหักล้างก่อน ไม่งั้นมันจะเดินจนหมดเวลา',
+    },
+  ];
+
+  // Breadth-first search for the fewest steps that satisfy a goal (mud treated as solid ground).
+  function optimalSteps(level, goal) {
+    const w = new MF.World(level, []);
+    w.rand = () => 0.999; // never slip
+    const seen = new Set();
+    let frontier = [[w.pos, 0, 0]];
+    seen.add(w.stateOf(w.pos, 0, 0));
+    for (let depth = 1; depth <= 400 && frontier.length; depth++) {
+      const next = [];
+      for (const [pos, key, mask] of frontier) {
+        for (let a = 0; a < 4; a++) {
+          w.pos = pos; w.hasKey = key; w.mask = mask; w.steps = 0; w.done = false;
+          const { events } = w.step(a);
+          if (goal.noThorn && events.includes('touch_thorn')) continue;
+          if (goal.noBump && events.includes('bump_wall')) continue;
+          if (events.includes('reach_beacon')) {
+            if (!goal.allEmbers || w.mask === w.fullMask) return depth;
+            continue; // beacon ends the episode in quests
+          }
+          const s = w.stateOf(w.pos, w.hasKey, w.mask);
+          if (!seen.has(s)) { seen.add(s); next.push([w.pos, w.hasKey, w.mask]); }
+        }
+      }
+      frontier = next;
+    }
+    return Infinity;
+  }
+
+  // Did one greedy rollout satisfy the quest goal?
+  function checkRun(goal, roll, world, optimal) {
+    const path = roll.path;
+    let reachIdx = -1, thorn = false, bump = false;
+    for (let i = 1; i < path.length; i++) {
+      const ev = path[i].events;
+      if (ev.includes('touch_thorn')) thorn = true;
+      if (ev.includes('bump_wall')) bump = true;
+      if (ev.includes('reach_beacon')) { reachIdx = i; break; }
+    }
+    const why = [];
+    if (goal.beacon && reachIdx < 0) why.push('ไม่ถึงตะเกียง');
+    if (goal.noThorn && thorn) why.push('เหยียบหนาม');
+    if (goal.noBump && bump) why.push('เดินชนกำแพง');
+    if (goal.allEmbers && reachIdx >= 0 && path[reachIdx].mask !== world.fullMask) why.push('ถ่านไฟไม่ครบ');
+    if (goal.maxSteps && reachIdx >= 0) {
+      const lim = goal.maxSteps === 'optimal' ? optimal : goal.maxSteps;
+      if (reachIdx > lim) why.push(`ใช้ ${reachIdx} ก้าว (ต้องไม่เกิน ${lim})`);
+    }
+    return { ok: why.length === 0, why, steps: reachIdx < 0 ? path.length - 1 : reachIdx };
+  }
+
+  function budgetUsed(rules) {
+    return rules.filter((r) => r.on && !r.locked).reduce((s, r) => s + Math.abs(+r.reward || 0), 0);
+  }
+
+  // A resumable grading run, so the UI can grade in small time slices.
+  class QuestRun {
+    constructor(quest, playerRules, algo) {
+      this.quest = quest;
+      const mine = playerRules.filter((r) => r.on).map((r) => Object.assign({}, r, { locked: false }));
+      this.used = budgetUsed(mine);
+      this.rules = quest.locked.concat(mine);
+      this.world = new MF.World(quest.level, this.rules, 11);
+      this.brain = new MF.Brain(this.world.numStates, { algo: algo || 'q', alpha: 0.5, gamma: 0.97, epsStart: 1, epsMin: 0.05, epsDecay: quest.decay || 0.99, seed: 7 });
+      this.optimal = quest.goal.maxSteps === 'optimal' ? optimalSteps(quest.level, quest.goal) : null;
+      this.episodes = 0;
+      this.done = false;
+      this.result = null;
+      this.curve = []; // [episodes, passRate]
+      if (this.used > quest.budget + 1e-9) this._finish(false, `ใช้งบคะแนน ${this.used.toFixed(2)} เกินงบ ${quest.budget}`);
+      else if (mine.length > quest.maxRules) this._finish(false, `ใช้กฎ ${mine.length} ข้อ เกินที่อนุญาต ${quest.maxRules} ข้อ`);
+    }
+    evaluate() {
+      const goal = this.quest.goal, trials = goal.trials || 1;
+      let pass = 0, sample = null, sampleCheck = null;
+      for (let i = 0; i < trials; i++) {
+        const w = this.world.clone(1000 + i);
+        const roll = this.brain.rollout(w, null, true);
+        const c = checkRun(goal, roll, w, this.optimal);
+        if (c.ok) pass++;
+        if (!sample || (!c.ok && sampleCheck.ok)) { sample = roll; sampleCheck = c; }
+      }
+      return { rate: pass / trials, sample, check: sampleCheck };
+    }
+    step(msBudget) {
+      if (this.done) return this;
+      const q = this.quest, end = Date.now() + (msBudget || 20);
+      while (!this.done && Date.now() < end) {
+        for (let k = 0; k < q.checkpoint && this.episodes < q.episodes; k++) { this.brain.runEpisode(this.world); this.episodes++; }
+        const ev = this.evaluate();
+        this.curve.push([this.episodes, ev.rate]);
+        this.last = ev;
+        const need = q.goal.passRate || 1;
+        if (ev.rate >= need - 1e-9) this._finish(true, null, ev);
+        else if (this.episodes >= q.episodes) this._finish(false, ev.check.why.join(', ') || 'ยังไม่ผ่านเป้าหมาย', ev);
+      }
+      return this;
+    }
+    _finish(passed, reason, ev) {
+      this.done = true;
+      const q = this.quest;
+      let stars = 0;
+      if (passed) stars = this.episodes <= q.par[1] ? 3 : this.episodes <= q.par[0] ? 2 : 1;
+      this.result = { passed, reason, stars, episodes: this.episodes, used: this.used, rate: ev ? ev.rate : 0, sample: ev ? ev.sample : null, optimal: this.optimal };
+    }
+  }
+
+  MF.QUESTS = QUESTS;
+  MF.QuestRun = QuestRun;
+  MF.optimalSteps = optimalSteps;
+  MF.checkRun = checkRun;
+  MF.budgetUsed = budgetUsed;
 })(typeof window !== 'undefined' ? window : globalThis);
 </script>
 <script data-mf="art">
@@ -1065,6 +1324,20 @@ footer a { color: var(--accent); }
         }
         break;
       }
+      case 'm': {
+        ctx.fillStyle = P.mud;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + s * 0.04, s * 0.44, s * 0.36, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = P.mudHi;
+        const wob = Math.sin(t * 1.5 + seed) * s * 0.03;
+        for (const [ox, oy, rr] of [[-0.18, -0.06, 0.08], [0.15, 0.1, 0.06], [0.05, -0.18, 0.04]]) {
+          ctx.beginPath();
+          ctx.ellipse(cx + ox * s + wob, cy + oy * s, rr * s * 1.6, rr * s * 0.7, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        break;
+      }
       case 'S': {
         ctx.strokeStyle = P.accent;
         ctx.lineWidth = Math.max(1, s * 0.05);
@@ -1101,7 +1374,8 @@ footer a { color: var(--accent); }
   const STORE_KEY = 'moblet-forge/project/v1';
   const CREATOR_DEFAULT = 'นริสันต์ นาคะเกศ (Narisan Nakakes)';
   const ARROWS = ['↑', '→', '↓', '←'];
-  const TOOL_ORDER = ['#', '.', 'S', 'B', 'e', 'x', 'k', 'G', 'w'];
+  const TOOL_ORDER = ['#', '.', 'S', 'B', 'e', 'x', 'k', 'G', 'w', 'm'];
+  const QUEST_KEY = 'moblet-forge/quests/v1';
 
   // ---------------------------------------------------------------- project
   const cloneLevel = (l) => ({ name: l.name || 'ด่าน', note: l.note || '', w: l.w, h: l.h, grid: l.grid.slice(), maxSteps: l.maxSteps || 0 });
@@ -1138,7 +1412,7 @@ footer a { color: var(--accent); }
   }
   let saveTimer = 0;
   function save() {
-    if (EMBED) return;
+    if (EMBED || S.quest) return; // quest maps never overwrite the creator's project
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
       try { const { brain, ...rest } = project; localStorage.setItem(STORE_KEY, JSON.stringify(rest)); } catch (e) { /* storage unavailable */ }
@@ -1206,7 +1480,7 @@ footer a { color: var(--accent); }
     P = {
       floorA: v('--floor-a'), floorB: v('--floor-b'), wall: v('--wall'), wallHi: v('--wall-hi'), beacon: v('--beacon'),
       ember: v('--ember'), emberDark: v('--ember-dark'), thorn: v('--thorn'), key: v('--key'), gateBg: v('--gate-bg'),
-      wind: v('--wind'), accent: v('--accent'), ink: v('--ink'), muted: v('--muted'), bg: v('--bg'), line: v('--line'), good: v('--good'),
+      wind: v('--wind'), mud: v('--mud'), mudHi: v('--mud-hi'), star: v('--star'), accent: v('--accent'), ink: v('--ink'), muted: v('--muted'), bg: v('--bg'), line: v('--line'), good: v('--good'),
     };
   }
   readPalette();
@@ -1391,9 +1665,11 @@ footer a { color: var(--accent); }
 
   // ---------------------------------------------------------------- tabs
   function setTab(tab) {
+    if (S.quest && tab !== 'quest') leaveQuest();
     S.tab = tab;
     $$('.tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
     $$('.pane').forEach((p) => (p.hidden = p.dataset.pane !== tab));
+    if (tab === 'quest') { enterQuest(S.questId || MF.QUESTS[0].id); return; }
     if (tab === 'play') startPlay();
     else if (S.mode === 'play') setIdle();
     else if (S.mode === 'idle') setChip(tab === 'build' ? 'โหมดสร้างด่าน' : 'พร้อม', '');
@@ -1505,10 +1781,10 @@ footer a { color: var(--accent); }
   function opts(obj, sel) {
     return Object.entries(obj).map(([k, v]) => `<option value="${k}"${k === sel ? ' selected' : ''}>${v}</option>`).join('');
   }
-  function renderRules() {
-    const box = $('#rules');
+  // Rule cards: "เมื่อ [event] [condition] ให้ คะแนน [n] [จบรอบ] [นับว่าชนะ]"
+  function renderRuleList(box, rules, onChange, prefix) {
     box.innerHTML = '';
-    project.rules.forEach((r, idx) => {
+    rules.forEach((r, idx) => {
       const el = document.createElement('div');
       el.className = 'rule' + (r.on ? '' : ' off');
       el.innerHTML =
@@ -1521,17 +1797,20 @@ footer a { color: var(--accent); }
         `<label><input type="checkbox" data-k="end"${r.end ? ' checked' : ''}> จบรอบ</label>` +
         `<label><input type="checkbox" data-k="win"${r.win ? ' checked' : ''}> นับว่าชนะ</label></div>`;
       el.querySelectorAll('[data-k]').forEach((inp) => {
-        inp.id = `rule-${r.id}-${inp.dataset.k}`;
-        inp.addEventListener('change', () => {
+        inp.id = `${prefix || 'rule'}-${r.id}-${inp.dataset.k}`;
+        inp.addEventListener(inp.dataset.k === 'reward' ? 'input' : 'change', () => {
           const k = inp.dataset.k;
           r[k] = inp.type === 'checkbox' ? inp.checked : k === 'reward' ? Number(inp.value) || 0 : inp.value;
           if (k === 'on') el.classList.toggle('off', !r.on);
-          rebuild(); save();
+          onChange(false);
         });
       });
-      el.querySelector('.del').addEventListener('click', () => { project.rules.splice(idx, 1); renderRules(); rebuild(); save(); });
+      el.querySelector('.del').addEventListener('click', () => { rules.splice(idx, 1); onChange(true); });
       box.appendChild(el);
     });
+  }
+  function renderRules() {
+    renderRuleList($('#rules'), project.rules, (structural) => { if (structural) renderRules(); rebuild(); save(); });
   }
   $('#addRule').addEventListener('click', () => {
     project.rules.push({ id: 'r' + Date.now().toString(36), on: true, when: 'touch_ember', cond: 'always', reward: 0.2, end: false, win: false });
@@ -1681,11 +1960,11 @@ footer a { color: var(--accent); }
   window.addEventListener('resize', drawChart);
 
   // ---------------------------------------------------------------- watch AI
-  function startWatch() {
+  function startWatch(given) {
     if (S.training) S.training = false;
-    if (S.brain.episodes === 0) { toast('ยังไม่ได้ฝึกเลย กด "เริ่มฝึก" ก่อน'); return; }
+    if (!given && S.brain.episodes === 0) { toast('ยังไม่ได้ฝึกเลย กด "เริ่มฝึก" ก่อน'); return; }
     if (S.mode === 'play') S.play = null;
-    const roll = S.brain.rollout(S.world.clone());
+    const roll = given || S.brain.rollout(S.world.clone());
     const w = S.world.clone();
     S.mode = 'watch';
     S.focus = w;
@@ -1700,7 +1979,8 @@ footer a { color: var(--accent); }
     if (W.idx >= W.path.length - 1) {
       if (!W.ended) {
         W.ended = true;
-        setChip(W.won ? 'AI ผ่านด่าน!' : 'AI ยังไม่ผ่าน', W.won ? 'win' : 'lose');
+        if (W.onEnd) W.onEnd();
+        else setChip(W.won ? 'AI ผ่านด่าน!' : 'AI ยังไม่ผ่าน', W.won ? 'win' : 'lose');
       }
       return;
     }
@@ -1840,6 +2120,165 @@ footer a { color: var(--accent); }
     rd.onload = () => importProject(String(rd.result));
     rd.readAsText(f);
   });
+
+
+  // ---------------------------------------------------------------- coach quests (โหมดครูฝึก)
+  // Game-mode design: Narisan Nakakes. The coach writes rewards; the grader trains a
+  // fresh brain with a fixed seed and judges the result against the quest's own goal.
+  let questSaves = {};
+  try { questSaves = JSON.parse(localStorage.getItem(QUEST_KEY) || '{}') || {}; } catch (e) { questSaves = {}; }
+  const saveQuests = () => { try { localStorage.setItem(QUEST_KEY, JSON.stringify(questSaves)); } catch (e) { /* storage unavailable */ } };
+  const starsHtml = (n) => [0, 1, 2].map((i) => `<span class="${i < n ? 'on' : ''}">★</span>`).join('');
+  const condLabel = (c) => (c === 'always' ? '' : ' ' + MF.CONDITIONS[c]);
+
+  function goalLines(q) {
+    const g = q.goal, out = [];
+    if (g.beacon) out.push('ถึงตะเกียงเส้นชัย');
+    if (g.allEmbers) out.push('เก็บถ่านไฟครบทุกก้อนก่อนถึงตะเกียง');
+    if (g.noThorn) out.push('ไม่เหยียบหนามเลยสักครั้ง');
+    if (g.noBump) out.push('ไม่ชนกำแพงหรือประตูเลย');
+    if (g.maxSteps === 'optimal') out.push(`ใช้ก้าวไม่เกินทางที่สั้นที่สุด (${MF.optimalSteps(q.level, g)} ก้าว)`);
+    else if (g.maxSteps) out.push(`ใช้ไม่เกิน ${g.maxSteps} ก้าว`);
+    if (g.trials) out.push(`ผ่านอย่างน้อย ${Math.round(g.trials * g.passRate)} จาก ${g.trials} รอบทดสอบ (โลกมีความสุ่ม)`);
+    out.push(`ฝึกได้ไม่เกิน ${q.episodes.toLocaleString('th-TH')} รอบ · ★★ ภายใน ${q.par[0]} รอบ · ★★★ ภายใน ${q.par[1]} รอบ`);
+    return out;
+  }
+
+  function enterQuest(id) {
+    const q = MF.QUESTS.find((x) => x.id === id) || MF.QUESTS[0];
+    if (!S.quest) S.creator = { project, brain: S.brain };
+    S.training = false;
+    S.questId = q.id;
+    const saved = questSaves[q.id] || {};
+    const rules = (saved.rules || q.starter).map((r) => Object.assign({}, r, { locked: false }));
+    S.quest = { q, rules, algo: saved.algo || 'q', run: null, lastRoll: null };
+    project = {
+      format: 'moblet-forge/1', title: q.title, creator: S.creator.project.creator, moblet: S.creator.project.moblet,
+      level: cloneLevel(q.level), rules: q.locked.concat(rules), hyper: Object.assign({}, MF.DEFAULT_HYPER),
+    };
+    S.brain = null;
+    sizeBoard(); rebuild({ quiet: true });
+    $('#levelName').value = q.title;
+    $('#levelName').readOnly = true;
+    renderQuest();
+    setChip('โหมดครูฝึก', 'live');
+  }
+  function leaveQuest() {
+    if (S.quest && S.quest.run) S.quest.run.cancelled = true;
+    project = S.creator.project;
+    S.brain = S.creator.brain;
+    S.quest = null;
+    $('#levelName').readOnly = !!EMBED;
+    sizeBoard(); rebuild({ quiet: true }); fillBuildFields();
+  }
+  function syncQuestRules() {
+    const Q = S.quest;
+    project.rules = Q.q.locked.concat(Q.rules);
+    questSaves[Q.q.id] = Object.assign(questSaves[Q.q.id] || {}, { rules: Q.rules, algo: Q.algo });
+    saveQuests();
+    renderBudget();
+  }
+  function renderBudget() {
+    const Q = S.quest, q = Q.q;
+    const used = MF.budgetUsed(Q.rules), n = Q.rules.filter((r) => r.on).length;
+    const over = used > q.budget + 1e-9 || n > q.maxRules;
+    $('#questBudget').classList.toggle('over', over);
+    $('#questBudgetNum').textContent = `${used.toFixed(2)} / ${q.budget} · กฎ ${n}/${q.maxRules} ข้อ`;
+    $('#questBudgetBar').style.width = Math.min(100, (used / q.budget) * 100) + '%';
+    $('#questSubmit').disabled = over || !!(Q.run && !Q.run.done);
+  }
+  function renderQuestList() {
+    const box = $('#questList');
+    box.innerHTML = '';
+    MF.QUESTS.forEach((q, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'qbtn';
+      b.setAttribute('aria-pressed', String(S.quest && S.quest.q.id === q.id));
+      const st = (questSaves[q.id] && questSaves[q.id].stars) || 0;
+      b.innerHTML = `<small>ภารกิจ ${i + 1}</small><b>${q.title}</b><span class="stars" aria-label="${st} ดาว">${starsHtml(st)}</span>`;
+      b.addEventListener('click', () => enterQuest(q.id));
+      box.appendChild(b);
+    });
+  }
+  function renderQuest() {
+    const Q = S.quest, q = Q.q;
+    renderQuestList();
+    $('#questBrief').textContent = q.brief;
+    $('#questGoal').innerHTML = goalLines(q).map((t) => `<li>${t}</li>`).join('');
+    $('#questLocked').innerHTML = q.locked.map((r) =>
+      `<div><span>เมื่อ${MF.EVENTS[r.when]}${condLabel(r.cond)}${r.end ? ' → จบรอบ' : ''}${r.win ? ' (นับว่าชนะ)' : ''}</span><b>${r.reward ? (r.reward > 0 ? '+' : '') + r.reward : '0'}</b></div>`).join('');
+    renderRuleList($('#questRules'), Q.rules, (structural) => { if (structural) renderQuestRules(); syncQuestRules(); }, 'qrule');
+    $('#questAlgo').value = Q.algo;
+    $('#questVerdict').textContent = '';
+    $('#questVerdict').className = 'verdict';
+    $('#questHintText').hidden = true;
+    $('#questHintText').textContent = q.hint;
+    $('#questBar').style.width = '0';
+    $('#questReplay').disabled = true;
+    renderBudget();
+  }
+  function renderQuestRules() {
+    renderRuleList($('#questRules'), S.quest.rules, (structural) => { if (structural) renderQuestRules(); syncQuestRules(); }, 'qrule');
+  }
+  $('#questAddRule').addEventListener('click', () => {
+    S.quest.rules.push({ id: 'q' + Date.now().toString(36), on: true, when: 'every_step', cond: 'always', reward: 0, end: false, win: false });
+    renderQuestRules(); syncQuestRules();
+  });
+  $('#questAlgo').addEventListener('change', (e) => { S.quest.algo = e.target.value; syncQuestRules(); });
+  $('#questHint').addEventListener('click', () => { $('#questHintText').hidden = false; });
+  $('#questReplay').addEventListener('click', () => replayQuest());
+
+  function replayQuest() {
+    const Q = S.quest;
+    if (!Q || !Q.lastRoll) return;
+    startWatch(Q.lastRoll);
+    S.watch.onEnd = () => setChip(Q.lastPassed ? 'ผ่านภารกิจ' : 'ไม่ผ่านภารกิจ', Q.lastPassed ? 'win' : 'lose');
+  }
+  $('#questSubmit').addEventListener('click', () => {
+    const Q = S.quest;
+    if (!Q || (Q.run && !Q.run.done)) return;
+    setIdle();
+    const run = new MF.QuestRun(Q.q, Q.rules, Q.algo);
+    Q.run = run;
+    $('#questVerdict').textContent = 'กำลังฝึกสมองใหม่และตัดสิน…';
+    $('#questVerdict').className = 'verdict';
+    setChip('กำลังตัดสิน', 'live');
+    renderBudget();
+    const tick = () => {
+      if (run.cancelled) return;
+      run.step(14);
+      $('#questBar').style.width = (run.episodes / Q.q.episodes) * 100 + '%';
+      if (!run.done) { setTimeout(tick, 0); return; }
+      finishQuest(run);
+    };
+    tick();
+  });
+  function finishQuest(run) {
+    const Q = S.quest, r = run.result, q = Q.q;
+    S.brain = run.brain; // overlays now show the graded brain's thinking
+    Q.lastRoll = r.sample;
+    Q.lastPassed = r.passed;
+    $('#questBar').style.width = '0';
+    const v = $('#questVerdict');
+    if (r.passed) {
+      const prev = (questSaves[q.id] && questSaves[q.id].stars) || 0;
+      questSaves[q.id] = Object.assign(questSaves[q.id] || {}, { stars: Math.max(prev, r.stars) });
+      saveQuests();
+      v.innerHTML = `ผ่าน! <span class="stars">${starsHtml(r.stars)}</span> ฝึก ${r.episodes} รอบ · ใช้งบ ${r.used.toFixed(2)}/${q.budget}` +
+        (q.goal.trials ? ` · ผ่าน ${Math.round(r.rate * q.goal.trials)}/${q.goal.trials}` : '');
+      v.className = 'verdict win';
+      toast(r.stars === 3 ? 'สามดาว! ครูฝึกตัวจริง' : 'ผ่านแล้ว ลองให้ได้ดาวมากขึ้นด้วยการฝึกให้เร็วขึ้น');
+    } else {
+      v.textContent = 'ยังไม่ผ่าน: ' + (r.reason || 'ยังไม่ถึงเป้าหมาย') + (r.episodes ? ` (ฝึกครบ ${r.episodes} รอบ)` : '');
+      v.className = 'verdict lose';
+    }
+    renderQuestList();
+    renderBudget();
+    renderTrainStats();
+    if (r.sample) { $('#questReplay').disabled = false; replayQuest(); }
+    else setChip('ไม่ผ่านภารกิจ', 'lose');
+  }
 
   // ---------------------------------------------------------------- boot
   function fillAll() {

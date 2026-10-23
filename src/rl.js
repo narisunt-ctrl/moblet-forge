@@ -6,17 +6,7 @@
   'use strict';
   const MF = (g.MF = g.MF || {});
 
-  // Small seeded PRNG so a training run can be reproduced
-  function mulberry32(seed) {
-    let a = seed >>> 0;
-    return function () {
-      a = (a + 0x6d2b79f5) >>> 0;
-      let t = a;
-      t = Math.imul(t ^ (t >>> 15), t | 1);
-      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  }
+  const mulberry32 = MF.mulberry32; // defined in engine.js
 
   const DEFAULT_HYPER = {
     algo: 'q',          // 'q' = Q-learning (off-policy), 'sarsa' = on-policy
@@ -84,12 +74,20 @@
     }
 
     // Greedy rollout without learning; returns the visited positions
-    rollout(world, maxSteps) {
+    // Deterministic argmax: ties go to the lowest action index (used for grading)
+    argmax(s) {
+      const b = s * 4, Q = this.Q;
+      let a = 0;
+      for (let i = 1; i < 4; i++) if (Q[b + i] > Q[b + a] + 1e-9) a = i;
+      return a;
+    }
+    rollout(world, maxSteps, deterministic) {
       world.reset();
       const path = [{ pos: world.pos, hasKey: 0, mask: 0, events: [] }];
       const limit = maxSteps || world.maxSteps;
       while (!world.done && path.length <= limit) {
-        const st = world.step(this.greedy(world.state()));
+        const s0 = world.state();
+        const st = world.step(deterministic ? this.argmax(s0) : this.greedy(s0));
         path.push({ pos: world.pos, hasKey: world.hasKey, mask: world.mask, events: st.events });
       }
       return { path, won: world.won, ret: world.ret };
@@ -121,5 +119,4 @@
 
   MF.Brain = Brain;
   MF.DEFAULT_HYPER = DEFAULT_HYPER;
-  MF.mulberry32 = mulberry32;
 })(typeof window !== 'undefined' ? window : globalThis);

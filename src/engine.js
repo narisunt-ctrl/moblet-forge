@@ -18,7 +18,21 @@
     'k': { id: 'key', th: 'กุญแจ', solid: false },
     'G': { id: 'gate', th: 'ประตูกุญแจ', solid: false },
     'w': { id: 'wind', th: 'ลมพัด', solid: false },
+    'm': { id: 'mud', th: 'โคลนลื่น', solid: false },
   };
+  const SLIP_CHANCE = 0.4; // chance a step taken from mud goes in a random direction
+
+  // Small seeded PRNG so worlds and training runs can be reproduced
+  function mulberry32(seed) {
+    let a = seed >>> 0;
+    return function () {
+      a = (a + 0x6d2b79f5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
   const MAX_EMBERS = 8;
 
   // Events a rule can listen to
@@ -31,6 +45,7 @@
     touch_thorn: 'เหยียบหนาม',
     reach_beacon: 'ถึงตะเกียงเส้นชัย',
     blown: 'โดนลมพัด',
+    slip: 'ลื่นโคลน',
     timeout: 'หมดเวลา',
   };
   const CONDITIONS = {
@@ -55,8 +70,14 @@
   }
 
   class World {
-    constructor(level, rules) {
+    constructor(level, rules, seed) {
+      this.seed = seed == null ? 99 : seed;
+      this.rand = mulberry32(this.seed);
       this.load(level, rules);
+    }
+    reseed(seed) {
+      this.seed = seed;
+      this.rand = mulberry32(seed);
     }
     load(level, rules) {
       this.level = level;
@@ -132,6 +153,11 @@
     step(a) {
       if (this.done) return { s: this.state(), r: 0, done: true, events: [] };
       const events = ['every_step'];
+      // Mud is a "behavior" tile: it may override the chosen action (stochastic world)
+      if (this.grid[this.pos] === 'm' && this.rand() < SLIP_CHANCE) {
+        a = (this.rand() * 4) | 0;
+        events.push('slip');
+      }
       const [dx, dy] = DIRS[a];
       let x = this.pos % this.w, y = (this.pos / this.w) | 0;
       if (this._blocked(x + dx, y + dy)) events.push('bump_wall');
@@ -167,8 +193,8 @@
       this.ret += r;
       return { s: this.state(), r, done: this.done, events };
     }
-    clone() {
-      return new World(this.level, this.rules);
+    clone(seed) {
+      return new World(this.level, this.rules, seed == null ? this.seed : seed);
     }
   }
 
@@ -208,6 +234,8 @@
   MF.DIRS = DIRS;
   MF.MAX_EMBERS = MAX_EMBERS;
   MF.World = World;
+  MF.mulberry32 = mulberry32;
+  MF.SLIP_CHANCE = SLIP_CHANCE;
   MF.defaultRules = defaultRules;
   MF.blankLevel = blankLevel;
   MF.setTile = setTile;

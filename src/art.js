@@ -327,6 +327,20 @@
         }
         break;
       }
+      case 'm': {
+        ctx.fillStyle = P.mud;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + s * 0.04, s * 0.44, s * 0.36, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = P.mudHi;
+        const wob = Math.sin(t * 1.5 + seed) * s * 0.03;
+        for (const [ox, oy, rr] of [[-0.18, -0.06, 0.08], [0.15, 0.1, 0.06], [0.05, -0.18, 0.04]]) {
+          ctx.beginPath();
+          ctx.ellipse(cx + ox * s + wob, cy + oy * s, rr * s * 1.6, rr * s * 0.7, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        break;
+      }
       case 'S': {
         ctx.strokeStyle = P.accent;
         ctx.lineWidth = Math.max(1, s * 0.05);

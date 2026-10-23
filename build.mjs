@@ -2,7 +2,7 @@
 //   node build.mjs  ->  index.html (GitHub Pages) + dist/moblet-forge.html (same app, no wrapper)
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 
-const order = ['engine', 'rl', 'levels', 'art', 'app'];
+const order = ['engine', 'rl', 'levels', 'quests', 'art', 'app'];
 const shell = readFileSync('src/shell.html', 'utf8');
 const scripts = order
   .map((n) => `<script data-mf="${n}">\n${readFileSync(`src/${n}.js`, 'utf8').replace(/<\/script/gi, '<\\/script')}</script>`)
