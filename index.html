@@ -1,0 +1,1862 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Moblet Forge</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Moblet Forge — เครื่องมือสร้างเกมบนเว็บที่ตัวละครเรียนรู้ด้วย Reinforcement Learning โดย นริสันต์ นาคะเกศ">
+<meta name="author" content="Narisan Nakakes (นริสันต์ นาคะเกศ)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link data-mf-fonts rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style id="mf-style">
+/* Layout: two-pane workbench — the board (stage) on the left, a numbered workflow panel on the right; stacks on phones. */
+:root {
+  --bg: #e3e8dd;
+  --surface: #f1f4ec;
+  --surface-2: #e9eee3;
+  --ink: #17231f;
+  --muted: #56655e;
+  --line: #c3ccbe;
+  --accent: #2c4bd1;
+  --accent-soft: #d9e0fb;
+  --accent-ink: #ffffff;
+  --ember: #e3861a;
+  --good: #2c7a4c;
+  --bad: #b23a3a;
+  --floor-a: #d4dccd;
+  --floor-b: #cdd6c5;
+  --wall: #394843;
+  --wall-hi: #46564f;
+  --beacon: #dba128;
+  --ember-dark: #6b3c1c;
+  --thorn: #7c2a47;
+  --key: #a8722a;
+  --gate-bg: #b9a382;
+  --wind: #5f80cf;
+  --f-display: "Mitr", "Noto Sans Thai", "Leelawadee UI", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans Thai", "Noto Sans Thai", "Leelawadee UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101715; --surface: #172019; --surface-2: #1c2620; --ink: #e2e9dd; --muted: #96a59b; --line: #2c3832;
+    --accent: #8099ff; --accent-soft: #232c52; --accent-ink: #0d1330; --ember: #f19a33; --good: #5fbf85; --bad: #f07a7a;
+    --floor-a: #1d2823; --floor-b: #19231f; --wall: #3a4a43; --wall-hi: #485a52; --beacon: #e9b443; --ember-dark: #3a2312;
+    --thorn: #c9577d; --key: #d29a49; --gate-bg: #5a4d39; --wind: #7f9be6; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101715; --surface: #172019; --surface-2: #1c2620; --ink: #e2e9dd; --muted: #96a59b; --line: #2c3832;
+  --accent: #8099ff; --accent-soft: #232c52; --accent-ink: #0d1330; --ember: #f19a33; --good: #5fbf85; --bad: #f07a7a;
+  --floor-a: #1d2823; --floor-b: #19231f; --wall: #3a4a43; --wall-hi: #485a52; --beacon: #e9b443; --ember-dark: #3a2312;
+  --thorn: #c9577d; --key: #d29a49; --gate-bg: #5a4d39; --wind: #7f9be6; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { background: var(--bg); color: var(--ink); }
+body { font-family: var(--f-body); font-size: 15px; line-height: 1.55; margin: 0; }
+.app { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 18px 28px; display: flex; flex-direction: column; gap: 18px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 500; margin: 0; text-wrap: balance; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px 24px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand canvas { width: 52px; height: 52px; }
+.brand h1 { font-size: 1.75rem; letter-spacing: -0.01em; line-height: 1.1; }
+.brand h1 em { font-style: normal; color: var(--accent); }
+.brand .sub { margin: 0; color: var(--muted); font-size: 0.92rem; }
+.byline { font-size: 0.88rem; color: var(--muted); text-align: right; }
+.byline b { color: var(--ink); font-weight: 600; }
+
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 18px; align-items: start; }
+@media (max-width: 920px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+.stage { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.stage-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.stage-head input { font-family: var(--f-display); font-size: 1.2rem; background: transparent; border: 0; border-bottom: 1.5px dashed var(--line); padding: 2px 0; min-width: 0; flex: 1 1 220px; }
+.stage-head input:focus { border-bottom-color: var(--accent); outline: none; }
+.chip { font-size: 0.78rem; letter-spacing: 0.02em; padding: 3px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.chip.live { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.chip.win { background: color-mix(in srgb, var(--good) 18%, transparent); color: var(--good); border-color: transparent; }
+.chip.lose { background: color-mix(in srgb, var(--bad) 16%, transparent); color: var(--bad); border-color: transparent; }
+.board-wrap { background: var(--wall); border-radius: 14px; padding: 10px; display: flex; justify-content: center; overflow: hidden; touch-action: none; }
+#board { display: block; border-radius: 6px; cursor: crosshair; max-width: 100%; }
+.embed #board { cursor: default; }
+.hud { display: flex; gap: 6px 18px; flex-wrap: wrap; font-family: var(--f-mono); font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; min-height: 1.4em; }
+.hud b { color: var(--ink); font-weight: 600; }
+.layers { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.85rem; color: var(--muted); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: transparent; padding: 4px 11px; cursor: pointer; font-size: 0.82rem; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.legend { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; }
+.legend i { display: inline-block; width: 56px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--thorn), transparent 50%, var(--accent)); }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; min-width: 0; }
+.tabs { display: grid; grid-template-columns: repeat(6, 1fr); border-bottom: 1px solid var(--line); background: var(--surface-2); }
+.tabs button { border: 0; background: transparent; padding: 10px 2px 9px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 0.78rem; color: var(--muted); border-bottom: 2.5px solid transparent; }
+.tabs button span { font-family: var(--f-mono); font-size: 0.7rem; opacity: 0.7; }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); background: var(--surface); }
+.embed .tabs { grid-template-columns: repeat(2, 1fr); }
+.embed .tabs [data-tab="build"], .embed .tabs [data-tab="rules"], .embed .tabs [data-tab="moblet"], .embed .tabs [data-tab="share"], .embed .creator-only { display: none; }
+.pane { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.pane h2 { font-size: 1.12rem; }
+.pane p.lead { margin: -6px 0 0; color: var(--muted); font-size: 0.88rem; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.row > label { font-size: 0.85rem; color: var(--muted); }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field > span { font-size: 0.78rem; letter-spacing: 0.02em; color: var(--muted); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+input[type="text"], input[type="number"], select, textarea { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; min-width: 0; width: 100%; }
+input[type="number"] { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+textarea { font-family: var(--f-mono); font-size: 0.78rem; min-height: 90px; resize: vertical; }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; }
+.btn { border: 1px solid var(--line); background: var(--bg); padding: 7px 13px; border-radius: 9px; cursor: pointer; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 6px; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.ghost { background: transparent; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 6px; }
+.tool { border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 6px 4px 5px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 0.76rem; color: var(--muted); }
+.tool canvas { width: 34px; height: 34px; border-radius: 6px; }
+.tool[aria-pressed="true"] { border-color: var(--accent); color: var(--ink); box-shadow: inset 0 0 0 1px var(--accent); }
+.hint { font-size: 0.8rem; color: var(--muted); margin: 0; }
+.note { font-size: 0.82rem; color: var(--muted); background: var(--surface-2); border-radius: 8px; padding: 8px 10px; margin: 0; }
+
+.rules { display: flex; flex-direction: column; gap: 8px; }
+.rule { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--bg); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 6px 8px; align-items: center; }
+.rule.off { opacity: 0.55; }
+.rule .kw { font-family: var(--f-display); font-size: 0.8rem; color: var(--accent); }
+.rule .body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; }
+.rule .then { grid-column: 2 / 4; display: flex; gap: 6px 12px; align-items: center; flex-wrap: wrap; font-size: 0.82rem; color: var(--muted); }
+.rule .then input[type="number"] { width: 78px; }
+.rule .then label { display: inline-flex; gap: 4px; align-items: center; }
+.rule .del { border: 0; background: transparent; cursor: pointer; color: var(--muted); font-size: 1.1rem; line-height: 1; padding: 2px 4px; }
+.rule .del:hover { color: var(--bad); }
+.rule select { padding: 4px 6px; font-size: 0.82rem; }
+
+.moblet-edit { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 14px; align-items: start; }
+.moblet-edit canvas { width: 150px; height: 150px; background: var(--floor-a); border-radius: 14px; }
+@media (max-width: 420px) { .moblet-edit { grid-template-columns: minmax(0, 1fr); } .moblet-edit canvas { margin: 0 auto; } }
+
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.stat { background: var(--bg); border-radius: 8px; padding: 6px 8px; }
+.stat span { display: block; font-size: 0.72rem; color: var(--muted); }
+.stat b { font-family: var(--f-mono); font-size: 0.98rem; font-variant-numeric: tabular-nums; font-weight: 600; }
+.chart { width: 100%; height: 150px; display: block; background: var(--bg); border-radius: 10px; }
+.progress { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.progress i { display: block; height: 100%; width: 0; background: var(--accent); transition: width 0.15s; }
+
+.dpad { display: grid; grid-template-columns: repeat(3, 52px); grid-template-rows: repeat(2, 46px); gap: 6px; justify-content: center; }
+.dpad button { border: 1px solid var(--line); background: var(--bg); border-radius: 10px; font-size: 1.1rem; cursor: pointer; }
+.dpad button:active { background: var(--accent-soft); }
+.dpad .u { grid-column: 2; grid-row: 1; } .dpad .l { grid-column: 1; grid-row: 2; } .dpad .d { grid-column: 2; grid-row: 2; } .dpad .r { grid-column: 3; grid-row: 2; }
+.result { font-family: var(--f-display); font-size: 1.05rem; margin: 0; min-height: 1.5em; }
+.result.win { color: var(--good); } .result.lose { color: var(--bad); }
+
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--bg); padding: 9px 16px; border-radius: 10px; font-size: 0.88rem; opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; max-width: calc(100% - 32px); z-index: 20; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+footer { font-size: 0.8rem; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 18px; border-top: 1px solid var(--line); padding-top: 12px; }
+footer a { color: var(--accent); }
+@media (prefers-reduced-motion: reduce) { .toast, .progress i { transition: none; } }
+</style>
+
+</head>
+<body>
+<div class="app" id="mf-root">
+  <header class="top">
+    <div class="brand">
+      <canvas id="logo" width="104" height="104" aria-hidden="true"></canvas>
+      <div>
+        <h1>Moblet <em>Forge</em></h1>
+        <p class="sub" id="subTitle">โรงตีเกม ที่ตัวละครเรียนรู้ทางผ่านด่านได้เอง</p>
+      </div>
+    </div>
+    <div class="byline">ผู้สร้าง <b id="creatorLabel">นริสันต์ นาคะเกศ</b><br><span id="projTitleLabel"></span></div>
+  </header>
+
+  <main class="layout">
+    <section class="stage" aria-label="กระดานเกม">
+      <div class="stage-head">
+        <input id="levelName" type="text" aria-label="ชื่อด่าน" value="">
+        <span id="stageChip" class="chip">โหมดสร้างด่าน</span>
+      </div>
+      <div class="board-wrap" id="boardWrap"><canvas id="board" tabindex="0" aria-label="กระดานด่าน"></canvas></div>
+      <div class="hud" id="hud"></div>
+      <div class="layers">
+        <span>เลเยอร์ความคิดของ AI</span>
+        <div class="seg" id="overlaySeg">
+          <button data-ov="none" aria-pressed="false">ปิด</button>
+          <button data-ov="value" aria-pressed="true">ค่าที่ประเมิน</button>
+          <button data-ov="policy" aria-pressed="false">ทิศที่เลือก</button>
+          <button data-ov="visits" aria-pressed="false">ที่เคยไป</button>
+        </div>
+        <span class="legend" id="legend"><span>แย่</span><i></i><span>ดี</span></span>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <nav class="tabs" role="tablist">
+        <button role="tab" data-tab="build" aria-selected="true"><span>01</span>ด่าน</button>
+        <button role="tab" data-tab="rules" aria-selected="false"><span>02</span>กฎ</button>
+        <button role="tab" data-tab="moblet" aria-selected="false"><span>03</span>ตัวละคร</button>
+        <button role="tab" data-tab="train" aria-selected="false"><span>04</span>ฝึก AI</button>
+        <button role="tab" data-tab="play" aria-selected="false"><span>05</span>เล่น</button>
+        <button role="tab" data-tab="share" aria-selected="false"><span>06</span>แชร์</button>
+      </nav>
+
+      <div class="pane" data-pane="build">
+        <h2>วาดด่าน</h2>
+        <p class="lead">เลือกช่องด้านล่าง แล้วคลิกหรือลากบนกระดาน คลิกขวาเพื่อลบเป็นพื้น</p>
+        <div class="palette" id="palette"></div>
+        <div class="grid3">
+          <label class="field"><span>กว้าง</span><input id="lvW" type="number" min="5" max="16"></label>
+          <label class="field"><span>สูง</span><input id="lvH" type="number" min="5" max="12"></label>
+          <label class="field"><span>ก้าวสูงสุด</span><input id="lvMax" type="number" min="10" max="999"></label>
+        </div>
+        <div class="row">
+          <button class="btn" id="applySize">ปรับขนาด</button>
+          <button class="btn ghost" id="newLevel">เริ่มด่านว่าง</button>
+        </div>
+        <div class="field">
+          <span>ด่านตัวอย่าง</span>
+          <div class="row"><select id="sampleSel" style="flex:1"></select><button class="btn" id="loadSample">โหลด</button></div>
+        </div>
+        <p class="note" id="sampleNote"></p>
+      </div>
+
+      <div class="pane" data-pane="rules" hidden>
+        <h2>กฎเหตุการณ์</h2>
+        <p class="lead">กฎแต่ละข้อคือ "เมื่อ… ถ้า… ให้คะแนน…" คะแนนรวมคือสิ่งที่ AI ใช้ตัดสินว่าอะไรดี จึงเปลี่ยนนิสัยโมบเล็ตได้โดยไม่ต้องเขียนโค้ด</p>
+        <div class="rules" id="rules"></div>
+        <div class="row">
+          <button class="btn" id="addRule">+ เพิ่มกฎ</button>
+          <button class="btn ghost" id="resetRules">คืนค่ากฎเริ่มต้น</button>
+        </div>
+        <p class="hint">ลองตั้ง "เหยียบหนาม" เป็น +1 แล้วฝึกใหม่ จะเห็นว่าโมบเล็ตชอบหนามทันที</p>
+      </div>
+
+      <div class="pane" data-pane="moblet" hidden>
+        <h2>ออกแบบโมบเล็ต</h2>
+        <p class="lead">ตัวละครวาดสดด้วยโค้ดทั้งหมด ไม่มีไฟล์ภาพ จึงผสมได้หลายร้อยแบบ</p>
+        <div class="moblet-edit">
+          <canvas id="mobletPreview" width="300" height="300"></canvas>
+          <div class="field" style="gap:10px">
+            <label class="field"><span>ชื่อ</span><input id="mbName" type="text" maxlength="24"></label>
+            <div class="grid2">
+              <label class="field"><span>ทรงตัว</span><select id="mbBody"></select></label>
+              <label class="field"><span>ดวงตา</span><select id="mbEyes"></select></label>
+              <label class="field"><span>บนหัว</span><select id="mbCrest"></select></label>
+              <label class="field"><span>ลาย</span><select id="mbPattern"></select></label>
+            </div>
+            <label class="field"><span>สี</span><input id="mbHue" type="range" min="0" max="359"></label>
+          </div>
+        </div>
+        <div class="row"><button class="btn" id="mbRandom">สุ่มโมบเล็ตใหม่</button></div>
+      </div>
+
+      <div class="pane" data-pane="train" hidden>
+        <h2>ฝึก AI</h2>
+        <p class="lead">โมบเล็ตลองเดินมั่วก่อน แล้วค่อยๆ จำว่าทางไหนได้คะแนน (Reinforcement Learning แบบตาราง Q)</p>
+        <div class="grid2 creator-only">
+          <label class="field"><span>วิธีเรียนรู้</span><select id="hpAlgo"><option value="q">Q-learning</option><option value="sarsa">SARSA</option></select></label>
+          <label class="field"><span>รอบต่อครั้ง</span><select id="hpBatch"><option>200</option><option selected>1000</option><option>5000</option></select></label>
+          <label class="field"><span>อัตราเรียนรู้ α</span><input id="hpAlpha" type="number" step="0.05" min="0.01" max="1"></label>
+          <label class="field"><span>มองอนาคต γ</span><input id="hpGamma" type="number" step="0.01" min="0.5" max="0.999"></label>
+          <label class="field"><span>ลดการสุ่ม ต่อรอบ</span><input id="hpDecay" type="number" step="0.001" min="0.9" max="0.9999"></label>
+          <label class="field"><span>สุ่มน้อยสุด ε</span><input id="hpEpsMin" type="number" step="0.01" min="0" max="0.5"></label>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="trainBtn">เริ่มฝึก</button>
+          <button class="btn" id="watchBtn">ดู AI เล่น</button>
+          <button class="btn ghost creator-only" id="resetBrain">ล้างสมอง</button>
+        </div>
+        <div class="progress" aria-hidden="true"><i id="trainBar"></i></div>
+        <div class="stats">
+          <div class="stat"><span>รอบที่ฝึก</span><b id="stEp">0</b></div>
+          <div class="stat"><span>การสุ่ม ε</span><b id="stEps">1.00</b></div>
+          <div class="stat"><span>ชนะ 100 รอบหลัง</span><b id="stWin">0%</b></div>
+          <div class="stat"><span>สถานะที่จำ</span><b id="stStates">0</b></div>
+        </div>
+        <canvas class="chart" id="chart" aria-label="กราฟผลการฝึก"></canvas>
+        <p class="hint">เส้นน้ำเงิน = คะแนนเฉลี่ยต่อรอบ · เส้นส้ม = อัตราชนะ (แกนขวา)</p>
+      </div>
+
+      <div class="pane" data-pane="play" hidden>
+        <h2>เล่นเอง</h2>
+        <p class="lead">ใช้ลูกศรหรือ W A S D ถ้าเปิดโหมดแข่ง AI จะเดินพร้อมคุณเป็นเงาจางๆ</p>
+        <div class="row">
+          <label class="row"><input type="checkbox" id="raceAI" checked> แข่งกับ AI</label>
+          <button class="btn primary" id="playBtn">เริ่มใหม่</button>
+        </div>
+        <div class="dpad" id="dpad">
+          <button class="u" data-a="0" aria-label="ขึ้น">▲</button>
+          <button class="l" data-a="3" aria-label="ซ้าย">◀</button>
+          <button class="d" data-a="2" aria-label="ลง">▼</button>
+          <button class="r" data-a="1" aria-label="ขวา">▶</button>
+        </div>
+        <p class="result" id="playResult"></p>
+      </div>
+
+      <div class="pane" data-pane="share" hidden>
+        <h2>แชร์ผลงาน</h2>
+        <div class="grid2">
+          <label class="field"><span>ชื่อเกม</span><input id="projTitle" type="text" maxlength="60"></label>
+          <label class="field"><span>ผู้สร้าง</span><input id="projCreator" type="text" maxlength="80"></label>
+        </div>
+        <label class="row"><input type="checkbox" id="incBrain" checked> แนบสมอง AI ที่ฝึกแล้วไปด้วย</label>
+        <div class="row">
+          <button class="btn primary" id="exportGame">ส่งออกเป็นเกม .html</button>
+          <button class="btn" id="exportJson">ดาวน์โหลดโปรเจกต์ .json</button>
+          <button class="btn" id="copyJson">คัดลอก JSON</button>
+        </div>
+        <p class="note">ปุ่มดาวน์โหลดทำงานเมื่อเปิดจาก GitHub Pages หรือไฟล์ในเครื่อง ถ้าเปิดในหน้าตัวอย่างนี้ให้ใช้ "คัดลอก JSON" แทน</p>
+        <div class="field">
+          <span>นำเข้าโปรเจกต์</span>
+          <input id="importFile" type="file" accept=".json,application/json">
+          <textarea id="importText" placeholder="หรือวาง JSON ของโปรเจกต์ที่นี่"></textarea>
+          <div class="row"><button class="btn" id="importBtn">นำเข้าจากข้อความ</button></div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <footer>
+    <span>Moblet Forge · สร้างและออกแบบโดย <b>นริสันต์ นาคะเกศ</b> (Narisan Nakakes) · MIT License</span>
+    <a href="https://github.com/narisunt-ctrl/moblet-forge" target="_blank" rel="noopener">github.com/narisunt-ctrl/moblet-forge</a>
+  </footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+<script data-mf="engine">
+/* Moblet Forge — engine.js
+ * Grid world + event-rule system. The rules a creator writes are the reward
+ * function the Moblet learns from.
+ * Copyright (c) 2026 Narisan Nakakes. MIT License.
+ */
+(function (g) {
+  'use strict';
+  const MF = (g.MF = g.MF || {});
+
+  // Tile chars used in saved levels
+  const TILES = {
+    '.': { id: 'floor', th: 'พื้น', solid: false },
+    '#': { id: 'wall', th: 'กำแพง', solid: true },
+    'S': { id: 'start', th: 'จุดเกิด', solid: false },
+    'B': { id: 'beacon', th: 'ตะเกียงเส้นชัย', solid: false },
+    'e': { id: 'ember', th: 'ถ่านไฟ', solid: false },
+    'x': { id: 'thorn', th: 'หนาม', solid: false },
+    'k': { id: 'key', th: 'กุญแจ', solid: false },
+    'G': { id: 'gate', th: 'ประตูกุญแจ', solid: false },
+    'w': { id: 'wind', th: 'ลมพัด', solid: false },
+  };
+  const MAX_EMBERS = 8;
+
+  // Events a rule can listen to
+  const EVENTS = {
+    every_step: 'ทุกก้าวที่เดิน',
+    bump_wall: 'ชนกำแพง / ประตูปิด',
+    touch_ember: 'เก็บถ่านไฟ',
+    all_embers: 'เก็บถ่านไฟครบทุกก้อน',
+    pick_key: 'เก็บกุญแจ',
+    touch_thorn: 'เหยียบหนาม',
+    reach_beacon: 'ถึงตะเกียงเส้นชัย',
+    blown: 'โดนลมพัด',
+    timeout: 'หมดเวลา',
+  };
+  const CONDITIONS = {
+    always: 'เสมอ',
+    has_key: 'ถ้ามีกุญแจ',
+    no_key: 'ถ้ายังไม่มีกุญแจ',
+    all_embers: 'ถ้าเก็บถ่านไฟครบ',
+    missing_embers: 'ถ้าถ่านไฟยังไม่ครบ',
+  };
+  // dx, dy for actions 0..3 = up, right, down, left
+  const DIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+
+  function defaultRules() {
+    return [
+      { id: 'r1', on: true, when: 'every_step', cond: 'always', reward: -0.02, end: false, win: false },
+      { id: 'r2', on: true, when: 'bump_wall', cond: 'always', reward: -0.1, end: false, win: false },
+      { id: 'r3', on: true, when: 'touch_ember', cond: 'always', reward: 0.5, end: false, win: false },
+      { id: 'r4', on: true, when: 'touch_thorn', cond: 'always', reward: -1, end: true, win: false },
+      { id: 'r5', on: true, when: 'reach_beacon', cond: 'all_embers', reward: 2, end: true, win: true },
+      { id: 'r6', on: true, when: 'timeout', cond: 'always', reward: -0.5, end: true, win: false },
+    ];
+  }
+
+  class World {
+    constructor(level, rules) {
+      this.load(level, rules);
+    }
+    load(level, rules) {
+      this.level = level;
+      this.rules = rules || defaultRules();
+      this.w = level.w;
+      this.h = level.h;
+      this.grid = [];
+      this.emberIndex = new Int16Array(this.w * this.h).fill(-1);
+      this.start = 0;
+      let embers = 0;
+      for (let y = 0; y < this.h; y++) {
+        const row = level.grid[y] || '';
+        for (let x = 0; x < this.w; x++) {
+          let c = row[x] || '.';
+          if (!TILES[c]) c = '.';
+          const i = y * this.w + x;
+          if (c === 'S') this.start = i;
+          if (c === 'e') {
+            if (embers < MAX_EMBERS) this.emberIndex[i] = embers++;
+            else c = '.';
+          }
+          this.grid.push(c);
+        }
+      }
+      if (!level.grid.some((r) => r.includes('S'))) {
+        const free = this.grid.findIndex((c) => c === '.');
+        this.start = free < 0 ? 0 : free;
+      }
+      this.embers = embers;
+      this.fullMask = (1 << embers) - 1;
+      this.maxSteps = level.maxSteps || this.w * this.h * 2;
+      this.reset();
+    }
+    get numStates() {
+      return this.w * this.h * 2 * (1 << this.embers);
+    }
+    reset() {
+      this.pos = this.start;
+      this.mask = 0;
+      this.hasKey = 0;
+      this.steps = 0;
+      this.done = false;
+      this.won = false;
+      this.ret = 0;
+      return this.state();
+    }
+    state() {
+      return ((this.pos * 2 + this.hasKey) << this.embers) | this.mask;
+    }
+    stateOf(pos, hasKey, mask) {
+      return ((pos * 2 + hasKey) << this.embers) | mask;
+    }
+    tileAt(i) {
+      const c = this.grid[i];
+      if (c === 'e' && this.emberIndex[i] >= 0 && this.mask & (1 << this.emberIndex[i])) return '.';
+      if (c === 'k' && this.hasKey) return '.';
+      return c;
+    }
+    _blocked(x, y) {
+      if (x < 0 || y < 0 || x >= this.w || y >= this.h) return true;
+      const c = this.grid[y * this.w + x];
+      return c === '#' || (c === 'G' && !this.hasKey);
+    }
+    condOk(cond) {
+      switch (cond) {
+        case 'has_key': return this.hasKey === 1;
+        case 'no_key': return this.hasKey === 0;
+        case 'all_embers': return this.mask === this.fullMask;
+        case 'missing_embers': return this.mask !== this.fullMask;
+        default: return true;
+      }
+    }
+    step(a) {
+      if (this.done) return { s: this.state(), r: 0, done: true, events: [] };
+      const events = ['every_step'];
+      const [dx, dy] = DIRS[a];
+      let x = this.pos % this.w, y = (this.pos / this.w) | 0;
+      if (this._blocked(x + dx, y + dy)) events.push('bump_wall');
+      else { x += dx; y += dy; }
+      // Wind tiles push the Moblet one more cell in the same direction
+      if (this.grid[y * this.w + x] === 'w' && !this._blocked(x + dx, y + dy)) {
+        x += dx; y += dy;
+        events.push('blown');
+      }
+      this.pos = y * this.w + x;
+      const c = this.tileAt(this.pos);
+      if (c === 'e') {
+        this.mask |= 1 << this.emberIndex[this.pos];
+        events.push('touch_ember');
+        if (this.mask === this.fullMask) events.push('all_embers');
+      } else if (c === 'k') {
+        this.hasKey = 1;
+        events.push('pick_key');
+      } else if (c === 'x') events.push('touch_thorn');
+      else if (c === 'B') events.push('reach_beacon');
+      this.steps++;
+      const timedOut = this.steps >= this.maxSteps;
+      if (timedOut) events.push('timeout');
+
+      let r = 0;
+      for (const rule of this.rules) {
+        if (!rule.on || !events.includes(rule.when) || !this.condOk(rule.cond)) continue;
+        r += +rule.reward || 0;
+        if (rule.end) this.done = true;
+        if (rule.win) { this.won = true; this.done = true; }
+      }
+      if (timedOut) this.done = true;
+      this.ret += r;
+      return { s: this.state(), r, done: this.done, events };
+    }
+    clone() {
+      return new World(this.level, this.rules);
+    }
+  }
+
+  function blankLevel(w, h) {
+    const grid = [];
+    for (let y = 0; y < h; y++) {
+      let row = '';
+      for (let x = 0; x < w; x++) row += x === 0 || y === 0 || x === w - 1 || y === h - 1 ? '#' : '.';
+      grid.push(row);
+    }
+    grid[1] = '#S' + grid[1].slice(2);
+    grid[h - 2] = grid[h - 2].slice(0, w - 2) + 'B#';
+    return { name: 'ด่านใหม่', w, h, grid };
+  }
+
+  function setTile(level, x, y, c) {
+    const row = level.grid[y];
+    if (c === 'S') level.grid = level.grid.map((r) => r.replace(/S/g, '.'));
+    const r2 = level.grid[y];
+    level.grid[y] = r2.slice(0, x) + c + r2.slice(x + 1);
+    return row !== level.grid[y];
+  }
+
+  function resizeLevel(level, w, h) {
+    const grid = [];
+    for (let y = 0; y < h; y++) {
+      let row = '';
+      for (let x = 0; x < w; x++) row += (level.grid[y] && level.grid[y][x]) || '.';
+      grid.push(row);
+    }
+    return Object.assign({}, level, { w, h, grid });
+  }
+
+  MF.TILES = TILES;
+  MF.EVENTS = EVENTS;
+  MF.CONDITIONS = CONDITIONS;
+  MF.DIRS = DIRS;
+  MF.MAX_EMBERS = MAX_EMBERS;
+  MF.World = World;
+  MF.defaultRules = defaultRules;
+  MF.blankLevel = blankLevel;
+  MF.setTile = setTile;
+  MF.resizeLevel = resizeLevel;
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+<script data-mf="rl">
+/* Moblet Forge — rl.js
+ * Tabular reinforcement learning (Q-learning and SARSA) for Moblets.
+ * Copyright (c) 2026 Narisan Nakakes. MIT License.
+ */
+(function (g) {
+  'use strict';
+  const MF = (g.MF = g.MF || {});
+
+  // Small seeded PRNG so a training run can be reproduced
+  function mulberry32(seed) {
+    let a = seed >>> 0;
+    return function () {
+      a = (a + 0x6d2b79f5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  const DEFAULT_HYPER = {
+    algo: 'q',          // 'q' = Q-learning (off-policy), 'sarsa' = on-policy
+    alpha: 0.5,         // learning rate
+    gamma: 0.97,        // discount
+    epsStart: 1.0,
+    epsMin: 0.05,
+    epsDecay: 0.994,    // per episode
+    seed: 7,
+  };
+
+  class Brain {
+    constructor(numStates, hyper) {
+      this.hyper = Object.assign({}, DEFAULT_HYPER, hyper || {});
+      this.resize(numStates);
+    }
+    resize(numStates) {
+      this.nS = numStates;
+      this.Q = new Float32Array(numStates * 4);
+      this.visits = new Uint32Array(numStates);
+      this.episodes = 0;
+      this.eps = this.hyper.epsStart;
+      this.rand = mulberry32(this.hyper.seed);
+      this.history = []; // {ret, won, steps}
+    }
+    greedy(s) {
+      const b = s * 4, Q = this.Q;
+      let best = Q[b], n = 1, a = 0;
+      for (let i = 1; i < 4; i++) {
+        const v = Q[b + i];
+        if (v > best + 1e-9) { best = v; a = i; n = 1; }
+        else if (Math.abs(v - best) <= 1e-9 && this.rand() < 1 / ++n) a = i; // random tie-break
+      }
+      return a;
+    }
+    act(s, eps) {
+      return this.rand() < eps ? (this.rand() * 4) | 0 : this.greedy(s);
+    }
+    maxQ(s) {
+      const b = s * 4, Q = this.Q;
+      return Math.max(Q[b], Q[b + 1], Q[b + 2], Q[b + 3]);
+    }
+    value(s) { return this.maxQ(s); }
+
+    runEpisode(world) {
+      const h = this.hyper, Q = this.Q;
+      let s = world.reset();
+      let a = this.act(s, this.eps);
+      while (!world.done) {
+        this.visits[s]++;
+        const { s: s2, r, done } = world.step(a);
+        const a2 = done ? 0 : this.act(s2, this.eps);
+        let target = r;
+        if (!done) target += h.gamma * (h.algo === 'sarsa' ? Q[s2 * 4 + a2] : this.maxQ(s2));
+        const idx = s * 4 + a;
+        Q[idx] += h.alpha * (target - Q[idx]);
+        s = s2; a = a2;
+      }
+      this.episodes++;
+      this.eps = Math.max(h.epsMin, this.eps * h.epsDecay);
+      const rec = { ret: world.ret, won: world.won, steps: world.steps };
+      this.history.push(rec);
+      if (this.history.length > 5000) this.history.splice(0, this.history.length - 5000);
+      return rec;
+    }
+
+    // Greedy rollout without learning; returns the visited positions
+    rollout(world, maxSteps) {
+      world.reset();
+      const path = [{ pos: world.pos, hasKey: 0, mask: 0, events: [] }];
+      const limit = maxSteps || world.maxSteps;
+      while (!world.done && path.length <= limit) {
+        const st = world.step(this.greedy(world.state()));
+        path.push({ pos: world.pos, hasKey: world.hasKey, mask: world.mask, events: st.events });
+      }
+      return { path, won: world.won, ret: world.ret };
+    }
+
+    winRate(last) {
+      const hs = this.history.slice(-(last || 100));
+      if (!hs.length) return 0;
+      return hs.filter((h) => h.won).length / hs.length;
+    }
+
+    exportQ() {
+      const bytes = new Uint8Array(this.Q.buffer.slice(0));
+      let bin = '';
+      for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+      return (typeof btoa === 'function' ? btoa(bin) : Buffer.from(bin, 'binary').toString('base64'));
+    }
+    importQ(b64, numStates) {
+      const bin = typeof atob === 'function' ? atob(b64) : Buffer.from(b64, 'base64').toString('binary');
+      if (bin.length !== numStates * 16) return false;
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      this.resize(numStates);
+      this.Q = new Float32Array(bytes.buffer);
+      this.eps = this.hyper.epsMin;
+      return true;
+    }
+  }
+
+  MF.Brain = Brain;
+  MF.DEFAULT_HYPER = DEFAULT_HYPER;
+  MF.mulberry32 = mulberry32;
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+<script data-mf="levels">
+/* Moblet Forge — levels.js : sample levels shipped with the forge.
+ * Copyright (c) 2026 Narisan Nakakes. MIT License.
+ */
+(function (g) {
+  'use strict';
+  const MF = (g.MF = g.MF || {});
+  MF.SAMPLES = [
+    {
+      name: 'ลานแรกแย้ม',
+      note: 'ด่านฝึก: เก็บถ่านไฟ 2 ก้อนแล้วไปจุดตะเกียง',
+      w: 9, h: 7,
+      grid: [
+        '#########',
+        '#S..e...#',
+        '#.###.#.#',
+        '#...x...#',
+        '#.#.###.#',
+        '#e.....B#',
+        '#########',
+      ],
+    },
+    {
+      name: 'สวนหนามกับประตูกุญแจ',
+      note: 'ต้องหากุญแจก่อน ประตูถึงจะเปิด ระวังหนาม',
+      w: 12, h: 9,
+      grid: [
+        '############',
+        '#S...#....e#',
+        '#.##.#.##..#',
+        '#..x...#x..#',
+        '##.#####.###',
+        '#k..e......#',
+        '#.####.###G#',
+        '#e....x...B#',
+        '############',
+      ],
+    },
+    {
+      name: 'ทุ่งลมหวน',
+      note: 'ช่องลมพัดผลักโมบเล็ตเพิ่มอีกหนึ่งช่อง ใช้ให้เป็นทางลัด หรือหลบให้พ้นหนาม',
+      w: 13, h: 9,
+      grid: [
+        '#############',
+        '#S..w....x.e#',
+        '#.#.#.##.#..#',
+        '#...wwx.....#',
+        '###.#.#.###.#',
+        '#e..x.w...#.#',
+        '#.###.#.#.#.#',
+        '#...e...#..B#',
+        '#############',
+      ],
+    },
+  ];
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+<script data-mf="art">
+/* Moblet Forge — art.js
+ * Procedural drawing for tiles and Moblets. No image assets: everything is
+ * drawn on canvas from a palette, so creators can restyle freely.
+ * Copyright (c) 2026 Narisan Nakakes. MIT License.
+ */
+(function (g) {
+  'use strict';
+  const MF = (g.MF = g.MF || {});
+
+  const BODY = { drop: 'หยดน้ำ', pebble: 'ก้อนกรวด', lantern: 'โคมไฟ', bell: 'ระฆัง' };
+  const EYES = { round: 'ตากลม', sleepy: 'ตาง่วง', visor: 'แว่นยาว', cyclops: 'ตาเดียว' };
+  const CREST = { none: 'ไม่มี', leaf: 'ใบไม้', antenna: 'หนวดไฟ', flame: 'เปลวไฟ', horns: 'เขาเล็ก' };
+  const PATTERN = { none: 'เรียบ', belly: 'พุงขาว', spots: 'จุด', stripes: 'ลายขวาง' };
+
+  function defaultMoblet() {
+    return { name: 'ปุ๊กปิ๊ก', body: 'drop', hue: 168, eyes: 'round', crest: 'leaf', pattern: 'belly' };
+  }
+  function randomMoblet(rand) {
+    rand = rand || Math.random;
+    const pick = (o) => { const k = Object.keys(o); return k[(rand() * k.length) | 0]; };
+    const syl = ['ปุ๊ก', 'ปิ๊ก', 'ตุ้ม', 'มะ', 'ลิ', 'โบ', 'ฟู', 'นิล', 'จุ๋ม', 'ป๋อง', 'แตง', 'หมอก'];
+    const name = syl[(rand() * syl.length) | 0] + syl[(rand() * syl.length) | 0];
+    return { name, body: pick(BODY), hue: (rand() * 360) | 0, eyes: pick(EYES), crest: pick(CREST), pattern: pick(PATTERN) };
+  }
+
+  const hsl = (h, s, l, a) => `hsla(${h},${s}%,${l}%,${a == null ? 1 : a})`;
+
+  function bodyPath(ctx, shape, r) {
+    ctx.beginPath();
+    switch (shape) {
+      case 'pebble':
+        ctx.ellipse(0, 0.1 * r, 1.05 * r, 0.85 * r, 0, 0, Math.PI * 2);
+        break;
+      case 'lantern': {
+        const w = 0.85 * r, h = 0.95 * r, k = 0.35 * r;
+        ctx.moveTo(-w + k, -h);
+        ctx.lineTo(w - k, -h);
+        ctx.quadraticCurveTo(w, -h, w, -h + k);
+        ctx.lineTo(w, h - k);
+        ctx.quadraticCurveTo(w, h, w - k, h);
+        ctx.lineTo(-w + k, h);
+        ctx.quadraticCurveTo(-w, h, -w, h - k);
+        ctx.lineTo(-w, -h + k);
+        ctx.quadraticCurveTo(-w, -h, -w + k, -h);
+        break;
+      }
+      case 'bell':
+        ctx.moveTo(0, -r);
+        ctx.bezierCurveTo(0.7 * r, -r, 0.75 * r, 0.2 * r, 1.05 * r, 0.85 * r);
+        ctx.quadraticCurveTo(0, 1.05 * r, -1.05 * r, 0.85 * r);
+        ctx.bezierCurveTo(-0.75 * r, 0.2 * r, -0.7 * r, -r, 0, -r);
+        break;
+      default: // drop
+        ctx.moveTo(0, -1.15 * r);
+        ctx.bezierCurveTo(0.55 * r, -0.55 * r, 0.95 * r, -0.1 * r, 0.95 * r, 0.3 * r);
+        ctx.arc(0, 0.3 * r, 0.95 * r, 0, Math.PI);
+        ctx.bezierCurveTo(-0.95 * r, -0.1 * r, -0.55 * r, -0.55 * r, 0, -1.15 * r);
+    }
+    ctx.closePath();
+  }
+
+  // Draw a Moblet centred at (cx, cy). s = cell size. t = seconds.
+  function drawMoblet(ctx, cx, cy, s, spec, t, opt) {
+    opt = opt || {};
+    const r = s * 0.34;
+    const bob = Math.sin(t * 4 + (opt.phase || 0)) * s * 0.025;
+    const face = opt.facing == null ? 1 : opt.facing; // 0 up 1 right 2 down 3 left
+    const lookX = face === 1 ? 0.12 : face === 3 ? -0.12 : 0;
+    const lookY = face === 0 ? -0.1 : face === 2 ? 0.08 : 0;
+    const h = spec.hue;
+    const main = hsl(h, 62, 56), dark = hsl(h, 55, 30), light = hsl(h, 70, 82);
+    ctx.save();
+    ctx.globalAlpha = opt.alpha == null ? 1 : opt.alpha;
+    // shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + r * 1.0, r * 0.8, r * 0.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.translate(cx, cy + bob - r * 0.05);
+    const sq = opt.squash || 0;
+    ctx.scale(1 + sq * 0.15, 1 - sq * 0.15);
+
+    // feet
+    ctx.fillStyle = dark;
+    for (const fx of [-0.42, 0.42]) {
+      ctx.beginPath();
+      ctx.ellipse(fx * r, 0.92 * r, 0.22 * r, 0.13 * r, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // crest (behind body top)
+    ctx.lineWidth = Math.max(1, r * 0.09);
+    ctx.lineCap = 'round';
+    const topY = spec.body === 'pebble' ? -0.72 * r : spec.body === 'drop' ? -1.05 * r : -0.95 * r;
+    if (spec.crest === 'leaf') {
+      ctx.fillStyle = hsl((h + 110) % 360, 55, 45);
+      ctx.save();
+      ctx.translate(0.05 * r, topY);
+      ctx.rotate(0.5 + Math.sin(t * 3) * 0.12);
+      ctx.beginPath();
+      ctx.ellipse(0.22 * r, -0.1 * r, 0.3 * r, 0.13 * r, -0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    } else if (spec.crest === 'antenna') {
+      ctx.strokeStyle = dark;
+      ctx.beginPath();
+      ctx.moveTo(0, topY + 0.1 * r);
+      ctx.quadraticCurveTo(0.25 * r, topY - 0.3 * r, 0.1 * r, topY - 0.55 * r);
+      ctx.stroke();
+      ctx.fillStyle = hsl(48, 95, 60, 0.75 + 0.25 * Math.sin(t * 6));
+      ctx.beginPath();
+      ctx.arc(0.1 * r, topY - 0.6 * r, 0.14 * r, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (spec.crest === 'flame') {
+      const f = 1 + Math.sin(t * 9) * 0.1;
+      ctx.fillStyle = hsl(28, 95, 55);
+      ctx.beginPath();
+      ctx.moveTo(-0.2 * r, topY + 0.1 * r);
+      ctx.quadraticCurveTo(-0.25 * r, topY - 0.3 * r * f, 0, topY - 0.6 * r * f);
+      ctx.quadraticCurveTo(0.3 * r, topY - 0.25 * r * f, 0.2 * r, topY + 0.1 * r);
+      ctx.fill();
+      ctx.fillStyle = hsl(50, 100, 70);
+      ctx.beginPath();
+      ctx.ellipse(0, topY - 0.12 * r, 0.08 * r, 0.18 * r * f, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (spec.crest === 'horns') {
+      ctx.fillStyle = light;
+      for (const sx of [-1, 1]) {
+        ctx.beginPath();
+        ctx.moveTo(sx * 0.3 * r, topY + 0.3 * r);
+        ctx.quadraticCurveTo(sx * 0.55 * r, topY - 0.1 * r, sx * 0.5 * r, topY - 0.3 * r);
+        ctx.quadraticCurveTo(sx * 0.35 * r, topY + 0.05 * r, sx * 0.12 * r, topY + 0.35 * r);
+        ctx.fill();
+      }
+    }
+
+    // body
+    bodyPath(ctx, spec.body, r);
+    const grad = ctx.createRadialGradient(-0.35 * r, -0.4 * r, 0.1 * r, 0, 0, 1.3 * r);
+    grad.addColorStop(0, light);
+    grad.addColorStop(0.45, main);
+    grad.addColorStop(1, dark);
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.save();
+    ctx.clip();
+    if (spec.pattern === 'belly') {
+      ctx.fillStyle = hsl(h, 60, 92, 0.85);
+      ctx.beginPath();
+      ctx.ellipse(0, 0.6 * r, 0.55 * r, 0.42 * r, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (spec.pattern === 'spots') {
+      ctx.fillStyle = hsl(h, 50, 28, 0.45);
+      for (const [px, py, pr] of [[-0.55, 0.15, 0.13], [0.6, 0.35, 0.1], [-0.2, 0.7, 0.09], [0.35, -0.45, 0.08]]) {
+        ctx.beginPath();
+        ctx.arc(px * r, py * r, pr * r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (spec.pattern === 'stripes') {
+      ctx.fillStyle = hsl(h, 50, 30, 0.35);
+      for (const y of [0.25, 0.6]) ctx.fillRect(-1.2 * r, y * r, 2.4 * r, 0.14 * r);
+    }
+    ctx.restore();
+    ctx.strokeStyle = dark;
+    ctx.lineWidth = Math.max(1, r * 0.06);
+    bodyPath(ctx, spec.body, r);
+    ctx.stroke();
+
+    // eyes
+    const blink = (t * 1.3 + (opt.phase || 0)) % 4 > 3.88;
+    const ex = lookX * r, ey = (lookY - 0.05) * r;
+    ctx.fillStyle = '#16201f';
+    ctx.strokeStyle = '#16201f';
+    if (spec.eyes === 'visor') {
+      ctx.fillStyle = hsl((h + 180) % 360, 70, 25);
+      ctx.beginPath();
+      ctx.roundRect(-0.6 * r + ex, -0.2 * r + ey, 1.2 * r, 0.3 * r, 0.15 * r);
+      ctx.fill();
+      ctx.fillStyle = hsl((h + 180) % 360, 90, 75);
+      ctx.fillRect(-0.4 * r + ex + Math.sin(t * 2) * 0.2 * r, -0.12 * r + ey, 0.18 * r, 0.1 * r);
+    } else if (spec.eyes === 'cyclops') {
+      ctx.fillStyle = '#fbfbf5';
+      ctx.beginPath();
+      ctx.arc(ex, ey, 0.32 * r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#16201f';
+      ctx.beginPath();
+      ctx.arc(ex * 1.6, ey, blink ? 0.03 * r : 0.16 * r, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      for (const sx of [-0.3, 0.3]) {
+        const x = sx * r + ex;
+        if (spec.eyes === 'sleepy' || blink) {
+          ctx.lineWidth = Math.max(1, r * 0.08);
+          ctx.beginPath();
+          ctx.arc(x, ey - 0.02 * r, 0.12 * r, 0.15 * Math.PI, 0.85 * Math.PI);
+          ctx.stroke();
+        } else {
+          ctx.beginPath();
+          ctx.ellipse(x, ey, 0.1 * r, 0.14 * r, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(x + 0.03 * r, ey - 0.05 * r, 0.035 * r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#16201f';
+        }
+      }
+    }
+    // cheeks
+    ctx.fillStyle = 'rgba(255,120,120,0.35)';
+    for (const sx of [-0.55, 0.55]) {
+      ctx.beginPath();
+      ctx.ellipse(sx * r + ex * 0.5, 0.22 * r + ey, 0.12 * r, 0.07 * r, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // Tiles --------------------------------------------------------------
+  function drawTile(ctx, c, px, py, s, t, P, seed) {
+    const cx = px + s / 2, cy = py + s / 2;
+    // floor (everything sits on floor)
+    ctx.fillStyle = (seed & 1) ? P.floorA : P.floorB;
+    ctx.fillRect(px, py, s, s);
+    switch (c) {
+      case '#': {
+        ctx.fillStyle = P.wall;
+        ctx.fillRect(px, py, s, s);
+        ctx.fillStyle = P.wallHi;
+        const bh = s / 3;
+        for (let row = 0; row < 3; row++) {
+          const off = row % 2 ? s / 4 : 0;
+          for (let bx = -s / 4 + off; bx < s; bx += s / 2) {
+            const x0 = Math.max(px, px + bx + 1.5), x1 = Math.min(px + s, px + bx + s / 2 - 1.5);
+            if (x1 > x0) ctx.fillRect(x0, py + row * bh + 1.5, x1 - x0, bh - 3);
+          }
+        }
+        break;
+      }
+      case 'B': {
+        const glow = 0.5 + 0.5 * Math.sin(t * 2.5);
+        const rg = ctx.createRadialGradient(cx, cy, 1, cx, cy, s * 0.6);
+        rg.addColorStop(0, `rgba(255,210,90,${0.45 + glow * 0.25})`);
+        rg.addColorStop(1, 'rgba(255,210,90,0)');
+        ctx.fillStyle = rg;
+        ctx.fillRect(px, py, s, s);
+        ctx.fillStyle = P.ink;
+        ctx.fillRect(cx - s * 0.03, py + s * 0.1, s * 0.06, s * 0.12);
+        ctx.fillStyle = P.beacon;
+        ctx.beginPath();
+        ctx.roundRect(cx - s * 0.17, py + s * 0.22, s * 0.34, s * 0.5, s * 0.08);
+        ctx.fill();
+        ctx.fillStyle = `rgba(255,245,200,${0.6 + glow * 0.4})`;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, s * 0.07, s * 0.12, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = P.ink;
+        ctx.fillRect(cx - s * 0.2, py + s * 0.72, s * 0.4, s * 0.06);
+        break;
+      }
+      case 'e': {
+        const f = 1 + Math.sin(t * 8 + seed) * 0.12;
+        ctx.fillStyle = P.emberDark;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + s * 0.2, s * 0.18, s * 0.08, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = P.ember;
+        ctx.beginPath();
+        ctx.moveTo(cx - s * 0.15, cy + s * 0.18);
+        ctx.quadraticCurveTo(cx - s * 0.2, cy - s * 0.05 * f, cx, cy - s * 0.28 * f);
+        ctx.quadraticCurveTo(cx + s * 0.2, cy - s * 0.05 * f, cx + s * 0.15, cy + s * 0.18);
+        ctx.fill();
+        ctx.fillStyle = '#ffe9a6';
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + s * 0.06, s * 0.05, s * 0.1 * f, 0, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case 'x': {
+        ctx.fillStyle = P.thorn;
+        for (const [ox, oy, k] of [[-0.2, 0.1, 1], [0.15, -0.12, 0.8], [0.2, 0.2, 0.9], [-0.12, -0.2, 0.7]]) {
+          const bx = cx + ox * s, by = cy + oy * s, rr = s * 0.13 * k;
+          ctx.beginPath();
+          for (let i = 0; i < 6; i++) {
+            const a = (i / 6) * Math.PI * 2;
+            ctx.lineTo(bx + Math.cos(a) * rr * 1.7, by + Math.sin(a) * rr * 1.7);
+            ctx.lineTo(bx + Math.cos(a + 0.52) * rr * 0.6, by + Math.sin(a + 0.52) * rr * 0.6);
+          }
+          ctx.closePath();
+          ctx.fill();
+        }
+        break;
+      }
+      case 'k': {
+        const by = cy + Math.sin(t * 3 + seed) * s * 0.04;
+        ctx.strokeStyle = P.key;
+        ctx.lineWidth = s * 0.08;
+        ctx.beginPath();
+        ctx.arc(cx - s * 0.12, by, s * 0.12, 0, Math.PI * 2);
+        ctx.moveTo(cx, by);
+        ctx.lineTo(cx + s * 0.25, by);
+        ctx.moveTo(cx + s * 0.18, by);
+        ctx.lineTo(cx + s * 0.18, by + s * 0.1);
+        ctx.stroke();
+        break;
+      }
+      case 'G': {
+        ctx.fillStyle = P.gateBg;
+        ctx.fillRect(px + s * 0.08, py + s * 0.08, s * 0.84, s * 0.84);
+        ctx.fillStyle = P.key;
+        for (let i = 0; i < 4; i++) ctx.fillRect(px + s * (0.16 + i * 0.2), py + s * 0.1, s * 0.06, s * 0.8);
+        ctx.fillRect(px + s * 0.1, py + s * 0.45, s * 0.8, s * 0.06);
+        break;
+      }
+      case 'w': {
+        ctx.strokeStyle = P.wind;
+        ctx.lineWidth = Math.max(1, s * 0.05);
+        ctx.lineCap = 'round';
+        for (let i = 0; i < 3; i++) {
+          const y = py + s * (0.28 + i * 0.22);
+          const ph = ((t * 0.8 + i * 0.33 + seed * 0.1) % 1) * s * 0.3;
+          ctx.beginPath();
+          ctx.moveTo(px + s * 0.12 + ph * 0.3, y);
+          ctx.bezierCurveTo(px + s * 0.4, y - s * 0.08, px + s * 0.55, y + s * 0.08, px + s * 0.85, y);
+          ctx.stroke();
+        }
+        break;
+      }
+      case 'S': {
+        ctx.strokeStyle = P.accent;
+        ctx.lineWidth = Math.max(1, s * 0.05);
+        ctx.setLineDash([s * 0.08, s * 0.07]);
+        ctx.beginPath();
+        ctx.arc(cx, cy, s * 0.34, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        break;
+      }
+    }
+  }
+
+  MF.BODY = BODY;
+  MF.EYES = EYES;
+  MF.CREST = CREST;
+  MF.PATTERN = PATTERN;
+  MF.defaultMoblet = defaultMoblet;
+  MF.randomMoblet = randomMoblet;
+  MF.drawMoblet = drawMoblet;
+  MF.drawTile = drawTile;
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+<script data-mf="app">
+/* Moblet Forge — app.js : the editor, trainer and player UI.
+ * Copyright (c) 2026 Narisan Nakakes. MIT License.
+ */
+(function () {
+  'use strict';
+  const MF = window.MF;
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const PRISTINE = $('#mf-root').outerHTML; // markup used when exporting a standalone game
+  const STORE_KEY = 'moblet-forge/project/v1';
+  const CREATOR_DEFAULT = 'นริสันต์ นาคะเกศ (Narisan Nakakes)';
+  const ARROWS = ['↑', '→', '↓', '←'];
+  const TOOL_ORDER = ['#', '.', 'S', 'B', 'e', 'x', 'k', 'G', 'w'];
+
+  // ---------------------------------------------------------------- project
+  const cloneLevel = (l) => ({ name: l.name || 'ด่าน', note: l.note || '', w: l.w, h: l.h, grid: l.grid.slice(), maxSteps: l.maxSteps || 0 });
+  function newProject() {
+    return {
+      format: 'moblet-forge/1', title: 'เกมแรกของฉัน', creator: CREATOR_DEFAULT,
+      level: cloneLevel(MF.SAMPLES[0]), rules: MF.defaultRules(), moblet: MF.defaultMoblet(),
+      hyper: Object.assign({}, MF.DEFAULT_HYPER),
+    };
+  }
+  function normalize(p) {
+    if (!p || typeof p !== 'object') throw new Error('ไม่ใช่ไฟล์โปรเจกต์');
+    const base = newProject();
+    const lv = p.level;
+    if (!lv || !Array.isArray(lv.grid) || !(lv.w >= 3) || !(lv.h >= 3)) throw new Error('ข้อมูลด่านไม่ครบ');
+    const w = Math.min(16, lv.w | 0), h = Math.min(12, lv.h | 0);
+    const out = {
+      format: 'moblet-forge/1',
+      title: String(p.title || base.title).slice(0, 60),
+      creator: String(p.creator || base.creator).slice(0, 80),
+      level: MF.resizeLevel(cloneLevel({ ...lv, grid: lv.grid.map(String) }), w, h),
+      rules: Array.isArray(p.rules) ? p.rules.filter((r) => r && MF.EVENTS[r.when]).map((r, i) => ({
+        id: String(r.id || 'r' + i), on: r.on !== false, when: r.when, cond: MF.CONDITIONS[r.cond] ? r.cond : 'always',
+        reward: Number(r.reward) || 0, end: !!r.end, win: !!r.win,
+      })) : base.rules,
+      moblet: Object.assign(base.moblet, p.moblet || {}),
+      hyper: Object.assign(base.hyper, p.hyper || {}),
+      brain: p.brain || null,
+    };
+    return out;
+  }
+  function load() {
+    try { const t = localStorage.getItem(STORE_KEY); return t ? normalize(JSON.parse(t)) : null; } catch (e) { return null; }
+  }
+  let saveTimer = 0;
+  function save() {
+    if (EMBED) return;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      try { const { brain, ...rest } = project; localStorage.setItem(STORE_KEY, JSON.stringify(rest)); } catch (e) { /* storage unavailable */ }
+    }, 400);
+  }
+
+  const EMBED = window.MF_EMBED || null;
+  let project;
+  try { project = EMBED ? normalize(EMBED) : load() || newProject(); } catch (e) { project = newProject(); }
+  if (EMBED) document.documentElement.classList.add('embed'), document.body.classList.add('embed');
+
+  // ---------------------------------------------------------------- state
+  const S = {
+    tab: EMBED ? 'play' : 'build', tool: '#', overlay: 'value',
+    world: null, brain: null, training: false, trainTarget: 0, trainDone: 0,
+    mode: 'idle', // idle | watch | play
+    actors: [], focus: null, watch: null, play: null,
+    painting: false, visitCache: null, visitAt: 0,
+  };
+
+  function rebuild(opts) {
+    opts = opts || {};
+    S.world = new MF.World(project.level, project.rules);
+    const n = S.world.numStates;
+    if (!S.brain) S.brain = new MF.Brain(n, project.hyper);
+    else {
+      Object.assign(S.brain.hyper, project.hyper);
+      if (S.brain.nS !== n || opts.resetBrain) {
+        if (S.brain.episodes > 0 && !opts.quiet) toast('ขนาดสมองเปลี่ยนตามด่าน เริ่มฝึกใหม่ได้เลย');
+        S.brain.resize(n);
+      }
+    }
+    S.visitCache = null;
+    if (S.mode !== 'play') setIdle();
+    renderHUD();
+    renderTrainStats();
+  }
+
+  function makeActor(world, spec, alpha, phase) {
+    const x = world.pos % world.w, y = (world.pos / world.w) | 0;
+    return { world, spec, alpha, phase: phase || 0, x, y, px: x, py: y, facing: 2, squash: 0 };
+  }
+  function syncActor(a) {
+    const w = a.world;
+    const nx = w.pos % w.w, ny = (w.pos / w.w) | 0;
+    if (nx > a.x) a.facing = 1; else if (nx < a.x) a.facing = 3; else if (ny > a.y) a.facing = 2; else if (ny < a.y) a.facing = 0;
+    if (nx !== a.x || ny !== a.y) a.squash = 1;
+    a.x = nx; a.y = ny;
+  }
+  function setIdle() {
+    stopWatch();
+    S.mode = 'idle';
+    const w = S.world.clone();
+    S.focus = w;
+    S.actors = [makeActor(w, project.moblet, 1)];
+    setChip(S.tab === 'build' ? 'โหมดสร้างด่าน' : 'พร้อม', '');
+  }
+
+  // ---------------------------------------------------------------- canvas & palette
+  const board = $('#board'), bctx = board.getContext('2d');
+  let P = {};
+  function readPalette() {
+    const cs = getComputedStyle(document.documentElement);
+    const v = (n) => cs.getPropertyValue(n).trim();
+    P = {
+      floorA: v('--floor-a'), floorB: v('--floor-b'), wall: v('--wall'), wallHi: v('--wall-hi'), beacon: v('--beacon'),
+      ember: v('--ember'), emberDark: v('--ember-dark'), thorn: v('--thorn'), key: v('--key'), gateBg: v('--gate-bg'),
+      wind: v('--wind'), accent: v('--accent'), ink: v('--ink'), muted: v('--muted'), bg: v('--bg'), line: v('--line'), good: v('--good'),
+    };
+  }
+  readPalette();
+  try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => setTimeout(readPalette, 30)); } catch (e) { /* old browser */ }
+  new MutationObserver(() => setTimeout(readPalette, 30)).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
+
+  let cell = 40, dpr = 1;
+  function sizeBoard() {
+    const wrap = $('#boardWrap');
+    const avail = Math.max(200, wrap.clientWidth - 20);
+    const maxH = Math.max(260, Math.min(620, window.innerHeight * 0.66));
+    const lv = project.level;
+    cell = Math.max(18, Math.floor(Math.min(avail / lv.w, maxH / lv.h, 64)));
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    board.width = lv.w * cell * dpr;
+    board.height = lv.h * cell * dpr;
+    board.style.width = lv.w * cell + 'px';
+    board.style.height = lv.h * cell + 'px';
+  }
+  window.addEventListener('resize', sizeBoard);
+
+  function bestAction(s) {
+    const Q = S.brain.Q, b = s * 4;
+    let a = 0;
+    for (let i = 1; i < 4; i++) if (Q[b + i] > Q[b + a]) a = i;
+    return a;
+  }
+  function visitsPerCell() {
+    const now = performance.now();
+    if (S.visitCache && now - S.visitAt < 500) return S.visitCache;
+    const w = S.world, per = new Float32Array(w.w * w.h), block = 2 << w.embers;
+    const V = S.brain.visits;
+    for (let s = 0; s < V.length; s++) per[(s / block) | 0] += V[s];
+    let mx = 0;
+    for (const v of per) mx = Math.max(mx, v);
+    S.visitCache = { per, mx };
+    S.visitAt = now;
+    return S.visitCache;
+  }
+
+  function drawBoard(t) {
+    const w = S.focus || S.world, lv = project.level;
+    bctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    for (let y = 0; y < lv.h; y++) for (let x = 0; x < lv.w; x++) {
+      const i = y * lv.w + x;
+      MF.drawTile(bctx, w.tileAt(i), x * cell, y * cell, cell, t, P, (x * 7 + y * 13) ^ (x + y));
+    }
+    // AI overlay
+    const trained = S.brain && S.brain.episodes > 0;
+    if (trained && S.overlay !== 'none') {
+      const key = w.hasKey, mask = w.mask;
+      if (S.overlay === 'visits') {
+        const { per, mx } = visitsPerCell();
+        for (let i = 0; i < per.length; i++) {
+          if (w.grid[i] === '#' || !per[i]) continue;
+          const a = Math.pow(per[i] / mx, 0.45) * 0.55;
+          bctx.fillStyle = hexA(P.ember, a);
+          bctx.fillRect((i % lv.w) * cell, ((i / lv.w) | 0) * cell, cell, cell);
+        }
+      } else {
+        let lo = Infinity, hi = -Infinity;
+        const vals = new Float32Array(lv.w * lv.h);
+        for (let i = 0; i < vals.length; i++) {
+          if (w.grid[i] === '#') continue;
+          const v = S.brain.value(w.stateOf(i, key, mask));
+          vals[i] = v;
+          if (v < lo) lo = v;
+          if (v > hi) hi = v;
+        }
+        const span = Math.max(1e-6, Math.max(Math.abs(lo), Math.abs(hi)));
+        bctx.lineWidth = Math.max(1.2, cell * 0.06);
+        bctx.lineCap = 'round';
+        for (let i = 0; i < vals.length; i++) {
+          if (w.grid[i] === '#') continue;
+          const px = (i % lv.w) * cell, py = ((i / lv.w) | 0) * cell;
+          if (S.overlay === 'value') {
+            const v = vals[i] / span;
+            bctx.fillStyle = hexA(v >= 0 ? P.accent : P.thorn, Math.min(0.62, Math.abs(v) * 0.62));
+            bctx.fillRect(px, py, cell, cell);
+          } else {
+            const a = bestAction(w.stateOf(i, key, mask));
+            const [dx, dy] = MF.DIRS[a];
+            const cx = px + cell / 2, cy = py + cell / 2, L = cell * 0.26;
+            bctx.strokeStyle = hexA(P.accent, 0.85);
+            bctx.beginPath();
+            bctx.moveTo(cx - dx * L, cy - dy * L);
+            bctx.lineTo(cx + dx * L, cy + dy * L);
+            bctx.moveTo(cx + dx * L, cy + dy * L);
+            bctx.lineTo(cx + dx * L * 0.35 - dy * L * 0.55, cy + dy * L * 0.35 + dx * L * 0.55);
+            bctx.moveTo(cx + dx * L, cy + dy * L);
+            bctx.lineTo(cx + dx * L * 0.35 + dy * L * 0.55, cy + dy * L * 0.35 - dx * L * 0.55);
+            bctx.stroke();
+          }
+        }
+      }
+    }
+    // faint grid
+    bctx.strokeStyle = hexA(P.ink, 0.06);
+    bctx.lineWidth = 1;
+    bctx.beginPath();
+    for (let x = 1; x < lv.w; x++) { bctx.moveTo(x * cell + 0.5, 0); bctx.lineTo(x * cell + 0.5, lv.h * cell); }
+    for (let y = 1; y < lv.h; y++) { bctx.moveTo(0, y * cell + 0.5); bctx.lineTo(lv.w * cell, y * cell + 0.5); }
+    bctx.stroke();
+    // trail during watch
+    if (S.mode === 'watch' && S.watch) {
+      const pts = S.watch.path.slice(0, S.watch.idx + 1);
+      bctx.strokeStyle = hexA(P.accent, 0.45);
+      bctx.lineWidth = Math.max(2, cell * 0.08);
+      bctx.setLineDash([cell * 0.12, cell * 0.12]);
+      bctx.beginPath();
+      pts.forEach((p, k) => {
+        const x = (p.pos % lv.w + 0.5) * cell, y = (((p.pos / lv.w) | 0) + 0.5) * cell;
+        k ? bctx.lineTo(x, y) : bctx.moveTo(x, y);
+      });
+      bctx.stroke();
+      bctx.setLineDash([]);
+    }
+    // actors
+    for (const a of S.actors) {
+      a.px += (a.x - a.px) * 0.28;
+      a.py += (a.y - a.py) * 0.28;
+      a.squash *= 0.82;
+      MF.drawMoblet(bctx, (a.px + 0.5) * cell, (a.py + 0.5) * cell, cell, a.spec, t, a);
+    }
+  }
+  function hexA(color, a) {
+    const c = color.trim();
+    if (c[0] === '#' && (c.length === 7 || c.length === 4)) {
+      const f = c.length === 4 ? c.slice(1).split('').map((ch) => ch + ch).join('') : c.slice(1);
+      const n = parseInt(f, 16);
+      return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+    }
+    return c;
+  }
+
+  // ---------------------------------------------------------------- render loop
+  const logo = $('#logo'), lctx = logo.getContext('2d');
+  const prev = $('#mobletPreview'), pctx = prev.getContext('2d');
+  const reduceMotion = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } })();
+  let last = 0;
+  function frame(ms) {
+    const t = reduceMotion ? 0 : ms / 1000;
+    if (S.mode === 'watch') advanceWatch(ms);
+    drawBoard(t);
+    lctx.clearRect(0, 0, 104, 104);
+    MF.drawMoblet(lctx, 52, 50, 110, project.moblet, t, { facing: 2 });
+    if (S.tab === 'moblet') {
+      pctx.clearRect(0, 0, 300, 300);
+      MF.drawMoblet(pctx, 150, 140, 330, project.moblet, t, { facing: ((t / 2) | 0) % 4 === 0 ? 1 : 2 });
+    }
+    if (ms - last > 250) { last = ms; renderHUD(); }
+    requestAnimationFrame(frame);
+  }
+
+  // ---------------------------------------------------------------- HUD + chips
+  function setChip(text, cls) {
+    const c = $('#stageChip');
+    c.textContent = text;
+    c.className = 'chip' + (cls ? ' ' + cls : '');
+  }
+  function renderHUD() {
+    const w = S.focus || S.world;
+    if (!w) return;
+    const parts = [];
+    parts.push(`ก้าว <b>${w.steps}</b>/${w.maxSteps}`);
+    parts.push(`คะแนน <b>${(w.ret >= 0 ? '+' : '') + w.ret.toFixed(2)}</b>`);
+    if (w.embers) parts.push(`ถ่านไฟ <b>${popcount(w.mask)}/${w.embers}</b>`);
+    if (w.grid.includes('k')) parts.push(w.hasKey ? '<b>มีกุญแจ</b>' : 'ยังไม่มีกุญแจ');
+    if (S.mode === 'play' && S.play && S.play.ghost) parts.push(`AI: ก้าว <b>${S.play.ghost.steps}</b> คะแนน <b>${S.play.ghost.ret.toFixed(2)}</b>`);
+    $('#hud').innerHTML = parts.join('<span aria-hidden="true">·</span>');
+  }
+  const popcount = (m) => { let c = 0; while (m) { c += m & 1; m >>= 1; } return c; };
+
+  let toastTimer = 0;
+  function toast(msg) {
+    const el = $('#toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+  }
+
+  // ---------------------------------------------------------------- tabs
+  function setTab(tab) {
+    S.tab = tab;
+    $$('.tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+    $$('.pane').forEach((p) => (p.hidden = p.dataset.pane !== tab));
+    if (tab === 'play') startPlay();
+    else if (S.mode === 'play') setIdle();
+    else if (S.mode === 'idle') setChip(tab === 'build' ? 'โหมดสร้างด่าน' : 'พร้อม', '');
+    if (tab === 'train') drawChart();
+    board.style.cursor = tab === 'build' && !EMBED ? 'crosshair' : 'default';
+  }
+  $$('.tabs button').forEach((b) => b.addEventListener('click', () => setTab(b.dataset.tab)));
+
+  $$('#overlaySeg button').forEach((b) => b.addEventListener('click', () => {
+    S.overlay = b.dataset.ov;
+    $$('#overlaySeg button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    $('#legend').hidden = S.overlay !== 'value';
+  }));
+
+  // ---------------------------------------------------------------- build tab
+  function buildPalette() {
+    const pal = $('#palette');
+    pal.innerHTML = '';
+    for (const c of TOOL_ORDER) {
+      const b = document.createElement('button');
+      b.className = 'tool';
+      b.type = 'button';
+      b.dataset.tool = c;
+      b.setAttribute('aria-pressed', String(c === S.tool));
+      const cv = document.createElement('canvas');
+      cv.width = cv.height = 68;
+      b.appendChild(cv);
+      b.appendChild(document.createTextNode(MF.TILES[c].th));
+      b.addEventListener('click', () => {
+        S.tool = c;
+        $$('#palette .tool').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      });
+      pal.appendChild(b);
+    }
+    paintPaletteIcons();
+  }
+  function paintPaletteIcons() {
+    $$('#palette .tool').forEach((b) => {
+      const cv = b.querySelector('canvas'), cx = cv.getContext('2d');
+      cx.clearRect(0, 0, 68, 68);
+      MF.drawTile(cx, b.dataset.tool, 0, 0, 68, 0.6, P, 1);
+      if (b.dataset.tool === 'S') MF.drawMoblet(cx, 34, 34, 60, project.moblet, 0, { facing: 2 });
+    });
+  }
+
+  function cellFromEvent(e) {
+    const r = board.getBoundingClientRect();
+    const x = Math.floor(((e.clientX - r.left) / r.width) * project.level.w);
+    const y = Math.floor(((e.clientY - r.top) / r.height) * project.level.h);
+    if (x < 0 || y < 0 || x >= project.level.w || y >= project.level.h) return null;
+    return { x, y };
+  }
+  function paintAt(e) {
+    const p = cellFromEvent(e);
+    if (!p) return;
+    const erase = e.buttons === 2 || e.button === 2;
+    const c = erase ? '.' : S.tool;
+    const lv = project.level;
+    if (c === 'e' && lv.grid[p.y][p.x] !== 'e') {
+      const count = lv.grid.join('').split('e').length - 1;
+      if (count >= MF.MAX_EMBERS) { toast(`ใส่ถ่านไฟได้สูงสุด ${MF.MAX_EMBERS} ก้อนต่อด่าน`); return; }
+    }
+    if (MF.setTile(lv, p.x, p.y, c)) { rebuild(); save(); }
+  }
+  board.addEventListener('contextmenu', (e) => { if (S.tab === 'build') e.preventDefault(); });
+  board.addEventListener('pointerdown', (e) => {
+    if (S.tab !== 'build' || EMBED) return;
+    S.painting = true;
+    try { board.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+    paintAt(e);
+  });
+  board.addEventListener('pointermove', (e) => { if (S.painting) paintAt(e); });
+  const endPaint = () => (S.painting = false);
+  board.addEventListener('pointerup', endPaint);
+  board.addEventListener('pointercancel', endPaint);
+
+  function fillBuildFields() {
+    const lv = project.level;
+    $('#levelName').value = lv.name;
+    $('#lvW').value = lv.w;
+    $('#lvH').value = lv.h;
+    $('#lvMax').value = lv.maxSteps || lv.w * lv.h * 2;
+    const sample = MF.SAMPLES.find((s) => s.name === lv.name);
+    $('#sampleNote').textContent = (sample && sample.note) || lv.note || 'ด่านของคุณเอง: อย่าลืมวางจุดเกิดและตะเกียงเส้นชัย';
+  }
+  $('#levelName').addEventListener('input', (e) => { project.level.name = e.target.value.slice(0, 40); save(); });
+  $('#applySize').addEventListener('click', () => {
+    const w = clamp(+$('#lvW').value, 5, 16), h = clamp(+$('#lvH').value, 5, 12);
+    const m = clamp(+$('#lvMax').value || w * h * 2, 10, 999);
+    project.level = MF.resizeLevel(project.level, w, h);
+    project.level.maxSteps = m;
+    sizeBoard(); rebuild(); fillBuildFields(); save();
+  });
+  $('#newLevel').addEventListener('click', () => {
+    project.level = MF.blankLevel(clamp(+$('#lvW').value, 5, 16), clamp(+$('#lvH').value, 5, 12));
+    sizeBoard(); rebuild({ resetBrain: true, quiet: true }); fillBuildFields(); save();
+    toast('สร้างด่านว่างแล้ว');
+  });
+  const sampleSel = $('#sampleSel');
+  MF.SAMPLES.forEach((s, i) => { const o = document.createElement('option'); o.value = i; o.textContent = s.name; sampleSel.appendChild(o); });
+  $('#loadSample').addEventListener('click', () => {
+    project.level = cloneLevel(MF.SAMPLES[+sampleSel.value]);
+    sizeBoard(); rebuild({ resetBrain: true, quiet: true }); fillBuildFields(); save();
+    toast('โหลด "' + project.level.name + '" แล้ว');
+  });
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, Math.round(v) || a));
+
+  // ---------------------------------------------------------------- rules tab
+  function opts(obj, sel) {
+    return Object.entries(obj).map(([k, v]) => `<option value="${k}"${k === sel ? ' selected' : ''}>${v}</option>`).join('');
+  }
+  function renderRules() {
+    const box = $('#rules');
+    box.innerHTML = '';
+    project.rules.forEach((r, idx) => {
+      const el = document.createElement('div');
+      el.className = 'rule' + (r.on ? '' : ' off');
+      el.innerHTML =
+        `<input type="checkbox" aria-label="เปิดใช้กฎ" data-k="on"${r.on ? ' checked' : ''}>` +
+        `<div class="body"><select data-k="when" aria-label="เมื่อ">${opts(MF.EVENTS, r.when)}</select>` +
+        `<select data-k="cond" aria-label="เงื่อนไข">${opts(MF.CONDITIONS, r.cond)}</select></div>` +
+        `<button class="del" type="button" aria-label="ลบกฎ">×</button>` +
+        `<span class="kw">ให้</span>` +
+        `<div class="then">คะแนน <input type="number" step="0.05" data-k="reward" value="${r.reward}" aria-label="คะแนน">` +
+        `<label><input type="checkbox" data-k="end"${r.end ? ' checked' : ''}> จบรอบ</label>` +
+        `<label><input type="checkbox" data-k="win"${r.win ? ' checked' : ''}> นับว่าชนะ</label></div>`;
+      el.querySelectorAll('[data-k]').forEach((inp) => {
+        inp.id = `rule-${r.id}-${inp.dataset.k}`;
+        inp.addEventListener('change', () => {
+          const k = inp.dataset.k;
+          r[k] = inp.type === 'checkbox' ? inp.checked : k === 'reward' ? Number(inp.value) || 0 : inp.value;
+          if (k === 'on') el.classList.toggle('off', !r.on);
+          rebuild(); save();
+        });
+      });
+      el.querySelector('.del').addEventListener('click', () => { project.rules.splice(idx, 1); renderRules(); rebuild(); save(); });
+      box.appendChild(el);
+    });
+  }
+  $('#addRule').addEventListener('click', () => {
+    project.rules.push({ id: 'r' + Date.now().toString(36), on: true, when: 'touch_ember', cond: 'always', reward: 0.2, end: false, win: false });
+    renderRules(); rebuild(); save();
+  });
+  $('#resetRules').addEventListener('click', () => { project.rules = MF.defaultRules(); renderRules(); rebuild(); save(); toast('คืนค่ากฎเริ่มต้นแล้ว'); });
+
+  // ---------------------------------------------------------------- moblet tab
+  function fillMoblet() {
+    const m = project.moblet;
+    $('#mbName').value = m.name;
+    $('#mbBody').innerHTML = opts(MF.BODY, m.body);
+    $('#mbEyes').innerHTML = opts(MF.EYES, m.eyes);
+    $('#mbCrest').innerHTML = opts(MF.CREST, m.crest);
+    $('#mbPattern').innerHTML = opts(MF.PATTERN, m.pattern);
+    $('#mbHue').value = m.hue;
+  }
+  const mbMap = { mbName: 'name', mbBody: 'body', mbEyes: 'eyes', mbCrest: 'crest', mbPattern: 'pattern', mbHue: 'hue' };
+  Object.entries(mbMap).forEach(([id, k]) => $('#' + id).addEventListener('input', (e) => {
+    project.moblet[k] = k === 'hue' ? +e.target.value : e.target.value;
+    paintPaletteIcons(); save();
+  }));
+  $('#mbRandom').addEventListener('click', () => {
+    Object.assign(project.moblet, MF.randomMoblet());
+    fillMoblet(); paintPaletteIcons(); save();
+  });
+
+  // ---------------------------------------------------------------- train tab
+  const hpMap = { hpAlgo: 'algo', hpAlpha: 'alpha', hpGamma: 'gamma', hpDecay: 'epsDecay', hpEpsMin: 'epsMin' };
+  function fillHyper() {
+    Object.entries(hpMap).forEach(([id, k]) => ($('#' + id).value = project.hyper[k]));
+  }
+  Object.entries(hpMap).forEach(([id, k]) => $('#' + id).addEventListener('change', (e) => {
+    project.hyper[k] = k === 'algo' ? e.target.value : Number(e.target.value);
+    Object.assign(S.brain.hyper, project.hyper);
+    save();
+  }));
+
+  function startTraining() {
+    if (S.training) { S.training = false; renderTrainStats(); return; }
+    if (!S.world.grid.includes('B')) toast('ด่านนี้ยังไม่มีตะเกียงเส้นชัย AI จะไม่มีทางชนะ');
+    if (S.mode === 'watch') setIdle();
+    S.training = true;
+    S.trainTarget = +$('#hpBatch').value || 1000;
+    S.trainDone = 0;
+    setChip('AI กำลังฝึก', 'live');
+    trainTick();
+  }
+  function trainTick() {
+    if (!S.training) return;
+    const end = performance.now() + 14;
+    while (performance.now() < end && S.trainDone < S.trainTarget) {
+      S.brain.runEpisode(S.world);
+      S.trainDone++;
+    }
+    renderTrainStats();
+    drawChart();
+    if (S.trainDone >= S.trainTarget) {
+      S.training = false;
+      renderTrainStats();
+      const wr = Math.round(S.brain.winRate(100) * 100);
+      const greedyWin = S.brain.rollout(S.world.clone()).won;
+      setChip(greedyWin ? 'AI ผ่านด่านได้แล้ว' : 'ยังไม่ผ่าน ลองฝึกต่อ', greedyWin ? 'win' : '');
+      toast(greedyWin ? `ฝึกเสร็จ ${S.brain.episodes} รอบ กด "ดู AI เล่น" ได้เลย` : `ฝึกแล้ว ${S.brain.episodes} รอบ ชนะ ${wr}% ลองฝึกเพิ่มหรือปรับกฎ`);
+      return;
+    }
+    setTimeout(trainTick, 0);
+  }
+  function renderTrainStats() {
+    if (!S.brain) return;
+    $('#stEp').textContent = S.brain.episodes.toLocaleString('th-TH');
+    $('#stEps').textContent = S.brain.eps.toFixed(2);
+    $('#stWin').textContent = Math.round(S.brain.winRate(100) * 100) + '%';
+    $('#stStates').textContent = S.brain.nS.toLocaleString('th-TH');
+    $('#trainBar').style.width = S.training ? (S.trainDone / S.trainTarget) * 100 + '%' : '0';
+    $('#trainBtn').textContent = S.training ? 'หยุด' : 'เริ่มฝึก';
+  }
+  $('#trainBtn').addEventListener('click', startTraining);
+  $('#resetBrain').addEventListener('click', () => {
+    S.training = false;
+    S.brain.resize(S.world.numStates);
+    renderTrainStats(); drawChart(); setIdle();
+    toast('ล้างสมองแล้ว โมบเล็ตลืมทุกอย่าง');
+  });
+
+  const chart = $('#chart'), cctx = chart.getContext('2d');
+  function drawChart() {
+    if (S.tab !== 'train') return;
+    const W = chart.clientWidth || 360, H = chart.clientHeight || 150;
+    chart.width = W * dpr; chart.height = H * dpr;
+    cctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cctx.clearRect(0, 0, W, H);
+    const hs = S.brain.history;
+    const padL = 36, padR = 34, padT = 12, padB = 20;
+    const iw = W - padL - padR, ih = H - padT - padB;
+    cctx.font = '10px ' + getComputedStyle(document.body).getPropertyValue('--f-mono');
+    cctx.fillStyle = P.muted;
+    if (hs.length < 2) {
+      cctx.textAlign = 'center';
+      cctx.fillText('ยังไม่ได้ฝึก กด "เริ่มฝึก" เพื่อดูกราฟ', W / 2, H / 2);
+      return;
+    }
+    const n = Math.min(hs.length, Math.max(2, Math.floor(iw)));
+    const win = Math.max(10, Math.round(hs.length / 40));
+    const ret = [], wr = [];
+    for (let k = 0; k < n; k++) {
+      const end = Math.round(((k + 1) / n) * hs.length);
+      const start = Math.max(0, end - win);
+      let sr = 0, sw = 0;
+      for (let i = start; i < end; i++) { sr += hs[i].ret; sw += hs[i].won ? 1 : 0; }
+      ret.push(sr / (end - start)); wr.push(sw / (end - start));
+    }
+    let lo = Math.min(0, ...ret), hi = Math.max(0.1, ...ret);
+    const pad = (hi - lo) * 0.1; lo -= pad; hi += pad;
+    const yR = (v) => padT + ih - ((v - lo) / (hi - lo)) * ih;
+    const yW = (v) => padT + ih - v * ih;
+    const x = (k) => padL + (k / (n - 1)) * iw;
+    // grid + axes
+    cctx.strokeStyle = hexA(P.ink, 0.08);
+    cctx.lineWidth = 1;
+    cctx.textAlign = 'right';
+    for (let k = 0; k <= 4; k++) {
+      const v = lo + ((hi - lo) * k) / 4, y = yR(v);
+      cctx.beginPath(); cctx.moveTo(padL, y + 0.5); cctx.lineTo(W - padR, y + 0.5); cctx.stroke();
+      cctx.fillStyle = P.muted; cctx.fillText(v.toFixed(1), padL - 5, y + 3);
+    }
+    cctx.textAlign = 'left';
+    for (const v of [0, 0.5, 1]) { cctx.fillStyle = P.ember; cctx.fillText(Math.round(v * 100) + '%', W - padR + 5, yW(v) + 3); }
+    cctx.strokeStyle = hexA(P.ink, 0.25);
+    cctx.beginPath(); cctx.moveTo(padL, yR(0) + 0.5); cctx.lineTo(W - padR, yR(0) + 0.5); cctx.stroke();
+    cctx.textAlign = 'center'; cctx.fillStyle = P.muted;
+    cctx.fillText('รอบที่ ' + hs.length.toLocaleString('th-TH'), W - padR - 30, H - 5);
+    // area under return
+    cctx.beginPath();
+    ret.forEach((v, k) => (k ? cctx.lineTo(x(k), yR(v)) : cctx.moveTo(x(k), yR(v))));
+    cctx.lineTo(x(n - 1), yR(0)); cctx.lineTo(x(0), yR(0)); cctx.closePath();
+    cctx.fillStyle = hexA(P.accent, 0.12); cctx.fill();
+    const line = (arr, y, col, wd) => {
+      cctx.beginPath();
+      arr.forEach((v, k) => (k ? cctx.lineTo(x(k), y(v)) : cctx.moveTo(x(k), y(v))));
+      cctx.strokeStyle = col; cctx.lineWidth = wd; cctx.stroke();
+      cctx.fillStyle = col; cctx.beginPath(); cctx.arc(x(n - 1), y(arr[n - 1]), 3, 0, Math.PI * 2); cctx.fill();
+    };
+    line(wr, yW, P.ember, 1.5);
+    line(ret, yR, P.accent, 2);
+  }
+  window.addEventListener('resize', drawChart);
+
+  // ---------------------------------------------------------------- watch AI
+  function startWatch() {
+    if (S.training) S.training = false;
+    if (S.brain.episodes === 0) { toast('ยังไม่ได้ฝึกเลย กด "เริ่มฝึก" ก่อน'); return; }
+    if (S.mode === 'play') S.play = null;
+    const roll = S.brain.rollout(S.world.clone());
+    const w = S.world.clone();
+    S.mode = 'watch';
+    S.focus = w;
+    S.actors = [makeActor(w, project.moblet, 1)];
+    S.watch = { path: roll.path, idx: 0, won: roll.won, next: performance.now() + 300 };
+    setChip('AI กำลังเล่น', 'live');
+    renderTrainStats();
+  }
+  function advanceWatch(ms) {
+    const W = S.watch;
+    if (!W || ms < W.next) return;
+    if (W.idx >= W.path.length - 1) {
+      if (!W.ended) {
+        W.ended = true;
+        setChip(W.won ? 'AI ผ่านด่าน!' : 'AI ยังไม่ผ่าน', W.won ? 'win' : 'lose');
+      }
+      return;
+    }
+    W.idx++;
+    const p = W.path[W.idx], w = S.focus;
+    w.pos = p.pos; w.hasKey = p.hasKey; w.mask = p.mask; w.steps = W.idx;
+    const prevRet = w.ret;
+    w.ret = prevRet; // recompute return from events below for the HUD
+    let r = 0;
+    for (const rule of project.rules) if (rule.on && p.events.includes(rule.when) && w.condOk(rule.cond)) r += +rule.reward || 0;
+    w.ret += r;
+    syncActor(S.actors[0]);
+    W.next = ms + (p.events.includes('blown') ? 240 : 170);
+  }
+  function stopWatch() { S.watch = null; }
+  $('#watchBtn').addEventListener('click', () => { if (S.tab !== 'train') setTab('train'); startWatch(); });
+
+  // ---------------------------------------------------------------- play
+  function startPlay() {
+    stopWatch();
+    const human = S.world.clone();
+    const race = $('#raceAI').checked && S.brain.episodes > 0;
+    const ghost = race ? S.world.clone() : null;
+    S.mode = 'play';
+    S.play = { human, ghost, over: false };
+    S.focus = human;
+    S.actors = [];
+    if (ghost) S.actors.push(makeActor(ghost, project.moblet, 0.38, 1.7));
+    S.actors.push(makeActor(human, project.moblet, 1));
+    $('#playResult').textContent = '';
+    $('#playResult').className = 'result';
+    setChip('คุณกำลังเล่น', 'live');
+    if ($('#raceAI').checked && !race) $('#playResult').textContent = 'AI ยังไม่ได้ฝึก ตอนนี้เล่นคนเดียวไปก่อน';
+    renderHUD();
+  }
+  function playMove(a) {
+    const P2 = S.play;
+    if (!P2 || P2.over) return;
+    P2.human.step(a);
+    syncActor(S.actors[S.actors.length - 1]);
+    if (P2.ghost && !P2.ghost.done) { P2.ghost.step(S.brain.greedy(P2.ghost.state())); syncActor(S.actors[0]); }
+    if (P2.human.done) {
+      P2.over = true;
+      const h = P2.human, g = P2.ghost;
+      let msg = h.won ? `ผ่านด่าน! ${h.steps} ก้าว คะแนน ${h.ret.toFixed(2)}` : `ไม่ผ่าน คะแนน ${h.ret.toFixed(2)}`;
+      if (g) {
+        while (!g.done) g.step(S.brain.greedy(g.state()));
+        if (h.won && (!g.won || h.ret > g.ret + 1e-6)) msg += ' · ชนะ AI';
+        else if (g.won && (!h.won || g.ret > h.ret + 1e-6)) msg += ` · AI ทำได้ ${g.ret.toFixed(2)}`;
+        else msg += ' · เสมอกับ AI';
+      }
+      $('#playResult').textContent = msg;
+      $('#playResult').className = 'result ' + (h.won ? 'win' : 'lose');
+      setChip(h.won ? 'ผ่านด่าน' : 'จบรอบ', h.won ? 'win' : 'lose');
+    }
+    renderHUD();
+  }
+  $('#playBtn').addEventListener('click', startPlay);
+  $('#raceAI').addEventListener('change', startPlay);
+  $$('#dpad button').forEach((b) => b.addEventListener('click', () => playMove(+b.dataset.a)));
+  const KEYS = { ArrowUp: 0, KeyW: 0, ArrowRight: 1, KeyD: 1, ArrowDown: 2, KeyS: 2, ArrowLeft: 3, KeyA: 3 };
+  window.addEventListener('keydown', (e) => {
+    if (S.mode !== 'play' || !(e.code in KEYS)) return;
+    const tag = (document.activeElement && document.activeElement.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    e.preventDefault();
+    playMove(KEYS[e.code]);
+  });
+
+  // ---------------------------------------------------------------- share
+  function fillShare() {
+    $('#projTitle').value = project.title;
+    $('#projCreator').value = project.creator;
+    $('#creatorLabel').textContent = project.creator.replace(/\s*\(.*\)\s*$/, '') || 'ไม่ระบุ';
+    $('#projTitleLabel').textContent = project.title;
+  }
+  $('#projTitle').addEventListener('input', (e) => { project.title = e.target.value; fillShare(); save(); });
+  $('#projCreator').addEventListener('input', (e) => { project.creator = e.target.value; $('#creatorLabel').textContent = e.target.value; save(); });
+
+  function projectForExport(withBrain) {
+    const { brain, ...rest } = project;
+    const out = JSON.parse(JSON.stringify(rest));
+    out.createdWith = 'Moblet Forge by Narisan Nakakes';
+    if (withBrain && S.brain.episodes > 0) out.brain = { nS: S.brain.nS, episodes: S.brain.episodes, q: S.brain.exportQ() };
+    return out;
+  }
+  function download(name, text, type) {
+    try {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([text], { type }));
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+      toast('เตรียมไฟล์ ' + name + ' แล้ว');
+    } catch (e) { toast('เบราว์เซอร์นี้ดาวน์โหลดไม่ได้ ใช้ "คัดลอก JSON" แทน'); }
+  }
+  const slug = (s) => (s || 'moblet-game').toLowerCase().replace(/[^a-z0-9฀-๿]+/g, '-').replace(/^-|-$/g, '') || 'moblet-game';
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  function buildStandalone() {
+    const proj = projectForExport($('#incBrain').checked);
+    const json = JSON.stringify(proj).replace(/</g, '\\u003c');
+    const fonts = $('link[data-mf-fonts]');
+    const scripts = $$('script[data-mf]').map((s) => `<script data-mf="${s.dataset.mf}">${s.textContent}<\/script>`).join('\n');
+    return '<!doctype html>\n<html lang="th">\n<head>\n<meta charset="utf-8">\n' +
+      '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n' +
+      `<title>${esc(project.title)} · Moblet Forge</title>\n<meta name="author" content="${esc(project.creator)}">\n` +
+      (fonts ? fonts.outerHTML + '\n' : '') +
+      `<style id="mf-style">${$('#mf-style').textContent}</style>\n</head>\n<body>\n${PRISTINE}\n` +
+      `<script>window.MF_EMBED=${json};<\/script>\n${scripts}\n</body>\n</html>\n`;
+  }
+  $('#exportGame').addEventListener('click', () => download(slug(project.title) + '.html', buildStandalone(), 'text/html'));
+  $('#exportJson').addEventListener('click', () => download(slug(project.title) + '.moblet.json', JSON.stringify(projectForExport($('#incBrain').checked), null, 2), 'application/json'));
+  $('#copyJson').addEventListener('click', async () => {
+    const text = JSON.stringify(projectForExport($('#incBrain').checked));
+    try { await navigator.clipboard.writeText(text); toast('คัดลอก JSON แล้ว'); }
+    catch (e) { const ta = $('#importText'); ta.value = text; ta.focus(); ta.select(); toast('เลือกข้อความไว้ให้แล้ว กดคัดลอกเองได้เลย'); }
+  });
+  function importProject(text) {
+    try {
+      const p = normalize(JSON.parse(text));
+      project = p;
+      S.brain = null;
+      sizeBoard(); rebuild({ quiet: true });
+      if (p.brain && p.brain.q && S.brain.importQ(p.brain.q, S.world.numStates)) S.brain.episodes = p.brain.episodes || 1;
+      delete project.brain;
+      fillAll(); save();
+      toast('นำเข้า "' + project.title + '" แล้ว');
+    } catch (e) { toast('นำเข้าไม่สำเร็จ: ' + e.message); }
+  }
+  $('#importBtn').addEventListener('click', () => importProject($('#importText').value));
+  $('#importFile').addEventListener('change', (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => importProject(String(rd.result));
+    rd.readAsText(f);
+  });
+
+  // ---------------------------------------------------------------- boot
+  function fillAll() {
+    fillBuildFields(); renderRules(); fillMoblet(); fillHyper(); fillShare(); buildPalette(); renderTrainStats();
+  }
+  sizeBoard();
+  rebuild({ quiet: true });
+  if (project.brain && project.brain.q && S.brain.importQ(project.brain.q, S.world.numStates)) S.brain.episodes = project.brain.episodes || 1;
+  delete project.brain;
+  fillAll();
+  if (EMBED) {
+    $('#subTitle').textContent = project.title + ' · เกมที่สร้างด้วย Moblet Forge';
+    $('#levelName').readOnly = true;
+  }
+  setTab(S.tab);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

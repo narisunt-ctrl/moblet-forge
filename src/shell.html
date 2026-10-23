@@ -1,0 +1,330 @@
+<title>Moblet Forge</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Moblet Forge — เครื่องมือสร้างเกมบนเว็บที่ตัวละครเรียนรู้ด้วย Reinforcement Learning โดย นริสันต์ นาคะเกศ">
+<meta name="author" content="Narisan Nakakes (นริสันต์ นาคะเกศ)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link data-mf-fonts rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style id="mf-style">
+/* Layout: two-pane workbench — the board (stage) on the left, a numbered workflow panel on the right; stacks on phones. */
+:root {
+  --bg: #e3e8dd;
+  --surface: #f1f4ec;
+  --surface-2: #e9eee3;
+  --ink: #17231f;
+  --muted: #56655e;
+  --line: #c3ccbe;
+  --accent: #2c4bd1;
+  --accent-soft: #d9e0fb;
+  --accent-ink: #ffffff;
+  --ember: #e3861a;
+  --good: #2c7a4c;
+  --bad: #b23a3a;
+  --floor-a: #d4dccd;
+  --floor-b: #cdd6c5;
+  --wall: #394843;
+  --wall-hi: #46564f;
+  --beacon: #dba128;
+  --ember-dark: #6b3c1c;
+  --thorn: #7c2a47;
+  --key: #a8722a;
+  --gate-bg: #b9a382;
+  --wind: #5f80cf;
+  --f-display: "Mitr", "Noto Sans Thai", "Leelawadee UI", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans Thai", "Noto Sans Thai", "Leelawadee UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101715; --surface: #172019; --surface-2: #1c2620; --ink: #e2e9dd; --muted: #96a59b; --line: #2c3832;
+    --accent: #8099ff; --accent-soft: #232c52; --accent-ink: #0d1330; --ember: #f19a33; --good: #5fbf85; --bad: #f07a7a;
+    --floor-a: #1d2823; --floor-b: #19231f; --wall: #3a4a43; --wall-hi: #485a52; --beacon: #e9b443; --ember-dark: #3a2312;
+    --thorn: #c9577d; --key: #d29a49; --gate-bg: #5a4d39; --wind: #7f9be6; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101715; --surface: #172019; --surface-2: #1c2620; --ink: #e2e9dd; --muted: #96a59b; --line: #2c3832;
+  --accent: #8099ff; --accent-soft: #232c52; --accent-ink: #0d1330; --ember: #f19a33; --good: #5fbf85; --bad: #f07a7a;
+  --floor-a: #1d2823; --floor-b: #19231f; --wall: #3a4a43; --wall-hi: #485a52; --beacon: #e9b443; --ember-dark: #3a2312;
+  --thorn: #c9577d; --key: #d29a49; --gate-bg: #5a4d39; --wind: #7f9be6; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { background: var(--bg); color: var(--ink); }
+body { font-family: var(--f-body); font-size: 15px; line-height: 1.55; margin: 0; }
+.app { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 18px 28px; display: flex; flex-direction: column; gap: 18px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 500; margin: 0; text-wrap: balance; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px 24px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand canvas { width: 52px; height: 52px; }
+.brand h1 { font-size: 1.75rem; letter-spacing: -0.01em; line-height: 1.1; }
+.brand h1 em { font-style: normal; color: var(--accent); }
+.brand .sub { margin: 0; color: var(--muted); font-size: 0.92rem; }
+.byline { font-size: 0.88rem; color: var(--muted); text-align: right; }
+.byline b { color: var(--ink); font-weight: 600; }
+
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 18px; align-items: start; }
+@media (max-width: 920px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+.stage { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.stage-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.stage-head input { font-family: var(--f-display); font-size: 1.2rem; background: transparent; border: 0; border-bottom: 1.5px dashed var(--line); padding: 2px 0; min-width: 0; flex: 1 1 220px; }
+.stage-head input:focus { border-bottom-color: var(--accent); outline: none; }
+.chip { font-size: 0.78rem; letter-spacing: 0.02em; padding: 3px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.chip.live { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.chip.win { background: color-mix(in srgb, var(--good) 18%, transparent); color: var(--good); border-color: transparent; }
+.chip.lose { background: color-mix(in srgb, var(--bad) 16%, transparent); color: var(--bad); border-color: transparent; }
+.board-wrap { background: var(--wall); border-radius: 14px; padding: 10px; display: flex; justify-content: center; overflow: hidden; touch-action: none; }
+#board { display: block; border-radius: 6px; cursor: crosshair; max-width: 100%; }
+.embed #board { cursor: default; }
+.hud { display: flex; gap: 6px 18px; flex-wrap: wrap; font-family: var(--f-mono); font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; min-height: 1.4em; }
+.hud b { color: var(--ink); font-weight: 600; }
+.layers { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.85rem; color: var(--muted); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: transparent; padding: 4px 11px; cursor: pointer; font-size: 0.82rem; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.legend { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; }
+.legend i { display: inline-block; width: 56px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--thorn), transparent 50%, var(--accent)); }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; min-width: 0; }
+.tabs { display: grid; grid-template-columns: repeat(6, 1fr); border-bottom: 1px solid var(--line); background: var(--surface-2); }
+.tabs button { border: 0; background: transparent; padding: 10px 2px 9px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 0.78rem; color: var(--muted); border-bottom: 2.5px solid transparent; }
+.tabs button span { font-family: var(--f-mono); font-size: 0.7rem; opacity: 0.7; }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); background: var(--surface); }
+.embed .tabs { grid-template-columns: repeat(2, 1fr); }
+.embed .tabs [data-tab="build"], .embed .tabs [data-tab="rules"], .embed .tabs [data-tab="moblet"], .embed .tabs [data-tab="share"], .embed .creator-only { display: none; }
+.pane { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.pane h2 { font-size: 1.12rem; }
+.pane p.lead { margin: -6px 0 0; color: var(--muted); font-size: 0.88rem; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.row > label { font-size: 0.85rem; color: var(--muted); }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field > span { font-size: 0.78rem; letter-spacing: 0.02em; color: var(--muted); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+input[type="text"], input[type="number"], select, textarea { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; min-width: 0; width: 100%; }
+input[type="number"] { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+textarea { font-family: var(--f-mono); font-size: 0.78rem; min-height: 90px; resize: vertical; }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; }
+.btn { border: 1px solid var(--line); background: var(--bg); padding: 7px 13px; border-radius: 9px; cursor: pointer; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 6px; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.ghost { background: transparent; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 6px; }
+.tool { border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 6px 4px 5px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 0.76rem; color: var(--muted); }
+.tool canvas { width: 34px; height: 34px; border-radius: 6px; }
+.tool[aria-pressed="true"] { border-color: var(--accent); color: var(--ink); box-shadow: inset 0 0 0 1px var(--accent); }
+.hint { font-size: 0.8rem; color: var(--muted); margin: 0; }
+.note { font-size: 0.82rem; color: var(--muted); background: var(--surface-2); border-radius: 8px; padding: 8px 10px; margin: 0; }
+
+.rules { display: flex; flex-direction: column; gap: 8px; }
+.rule { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--bg); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 6px 8px; align-items: center; }
+.rule.off { opacity: 0.55; }
+.rule .kw { font-family: var(--f-display); font-size: 0.8rem; color: var(--accent); }
+.rule .body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; }
+.rule .then { grid-column: 2 / 4; display: flex; gap: 6px 12px; align-items: center; flex-wrap: wrap; font-size: 0.82rem; color: var(--muted); }
+.rule .then input[type="number"] { width: 78px; }
+.rule .then label { display: inline-flex; gap: 4px; align-items: center; }
+.rule .del { border: 0; background: transparent; cursor: pointer; color: var(--muted); font-size: 1.1rem; line-height: 1; padding: 2px 4px; }
+.rule .del:hover { color: var(--bad); }
+.rule select { padding: 4px 6px; font-size: 0.82rem; }
+
+.moblet-edit { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 14px; align-items: start; }
+.moblet-edit canvas { width: 150px; height: 150px; background: var(--floor-a); border-radius: 14px; }
+@media (max-width: 420px) { .moblet-edit { grid-template-columns: minmax(0, 1fr); } .moblet-edit canvas { margin: 0 auto; } }
+
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.stat { background: var(--bg); border-radius: 8px; padding: 6px 8px; }
+.stat span { display: block; font-size: 0.72rem; color: var(--muted); }
+.stat b { font-family: var(--f-mono); font-size: 0.98rem; font-variant-numeric: tabular-nums; font-weight: 600; }
+.chart { width: 100%; height: 150px; display: block; background: var(--bg); border-radius: 10px; }
+.progress { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.progress i { display: block; height: 100%; width: 0; background: var(--accent); transition: width 0.15s; }
+
+.dpad { display: grid; grid-template-columns: repeat(3, 52px); grid-template-rows: repeat(2, 46px); gap: 6px; justify-content: center; }
+.dpad button { border: 1px solid var(--line); background: var(--bg); border-radius: 10px; font-size: 1.1rem; cursor: pointer; }
+.dpad button:active { background: var(--accent-soft); }
+.dpad .u { grid-column: 2; grid-row: 1; } .dpad .l { grid-column: 1; grid-row: 2; } .dpad .d { grid-column: 2; grid-row: 2; } .dpad .r { grid-column: 3; grid-row: 2; }
+.result { font-family: var(--f-display); font-size: 1.05rem; margin: 0; min-height: 1.5em; }
+.result.win { color: var(--good); } .result.lose { color: var(--bad); }
+
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--bg); padding: 9px 16px; border-radius: 10px; font-size: 0.88rem; opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; max-width: calc(100% - 32px); z-index: 20; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+footer { font-size: 0.8rem; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 18px; border-top: 1px solid var(--line); padding-top: 12px; }
+footer a { color: var(--accent); }
+@media (prefers-reduced-motion: reduce) { .toast, .progress i { transition: none; } }
+</style>
+
+<div class="app" id="mf-root">
+  <header class="top">
+    <div class="brand">
+      <canvas id="logo" width="104" height="104" aria-hidden="true"></canvas>
+      <div>
+        <h1>Moblet <em>Forge</em></h1>
+        <p class="sub" id="subTitle">โรงตีเกม ที่ตัวละครเรียนรู้ทางผ่านด่านได้เอง</p>
+      </div>
+    </div>
+    <div class="byline">ผู้สร้าง <b id="creatorLabel">นริสันต์ นาคะเกศ</b><br><span id="projTitleLabel"></span></div>
+  </header>
+
+  <main class="layout">
+    <section class="stage" aria-label="กระดานเกม">
+      <div class="stage-head">
+        <input id="levelName" type="text" aria-label="ชื่อด่าน" value="">
+        <span id="stageChip" class="chip">โหมดสร้างด่าน</span>
+      </div>
+      <div class="board-wrap" id="boardWrap"><canvas id="board" tabindex="0" aria-label="กระดานด่าน"></canvas></div>
+      <div class="hud" id="hud"></div>
+      <div class="layers">
+        <span>เลเยอร์ความคิดของ AI</span>
+        <div class="seg" id="overlaySeg">
+          <button data-ov="none" aria-pressed="false">ปิด</button>
+          <button data-ov="value" aria-pressed="true">ค่าที่ประเมิน</button>
+          <button data-ov="policy" aria-pressed="false">ทิศที่เลือก</button>
+          <button data-ov="visits" aria-pressed="false">ที่เคยไป</button>
+        </div>
+        <span class="legend" id="legend"><span>แย่</span><i></i><span>ดี</span></span>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <nav class="tabs" role="tablist">
+        <button role="tab" data-tab="build" aria-selected="true"><span>01</span>ด่าน</button>
+        <button role="tab" data-tab="rules" aria-selected="false"><span>02</span>กฎ</button>
+        <button role="tab" data-tab="moblet" aria-selected="false"><span>03</span>ตัวละคร</button>
+        <button role="tab" data-tab="train" aria-selected="false"><span>04</span>ฝึก AI</button>
+        <button role="tab" data-tab="play" aria-selected="false"><span>05</span>เล่น</button>
+        <button role="tab" data-tab="share" aria-selected="false"><span>06</span>แชร์</button>
+      </nav>
+
+      <div class="pane" data-pane="build">
+        <h2>วาดด่าน</h2>
+        <p class="lead">เลือกช่องด้านล่าง แล้วคลิกหรือลากบนกระดาน คลิกขวาเพื่อลบเป็นพื้น</p>
+        <div class="palette" id="palette"></div>
+        <div class="grid3">
+          <label class="field"><span>กว้าง</span><input id="lvW" type="number" min="5" max="16"></label>
+          <label class="field"><span>สูง</span><input id="lvH" type="number" min="5" max="12"></label>
+          <label class="field"><span>ก้าวสูงสุด</span><input id="lvMax" type="number" min="10" max="999"></label>
+        </div>
+        <div class="row">
+          <button class="btn" id="applySize">ปรับขนาด</button>
+          <button class="btn ghost" id="newLevel">เริ่มด่านว่าง</button>
+        </div>
+        <div class="field">
+          <span>ด่านตัวอย่าง</span>
+          <div class="row"><select id="sampleSel" style="flex:1"></select><button class="btn" id="loadSample">โหลด</button></div>
+        </div>
+        <p class="note" id="sampleNote"></p>
+      </div>
+
+      <div class="pane" data-pane="rules" hidden>
+        <h2>กฎเหตุการณ์</h2>
+        <p class="lead">กฎแต่ละข้อคือ "เมื่อ… ถ้า… ให้คะแนน…" คะแนนรวมคือสิ่งที่ AI ใช้ตัดสินว่าอะไรดี จึงเปลี่ยนนิสัยโมบเล็ตได้โดยไม่ต้องเขียนโค้ด</p>
+        <div class="rules" id="rules"></div>
+        <div class="row">
+          <button class="btn" id="addRule">+ เพิ่มกฎ</button>
+          <button class="btn ghost" id="resetRules">คืนค่ากฎเริ่มต้น</button>
+        </div>
+        <p class="hint">ลองตั้ง "เหยียบหนาม" เป็น +1 แล้วฝึกใหม่ จะเห็นว่าโมบเล็ตชอบหนามทันที</p>
+      </div>
+
+      <div class="pane" data-pane="moblet" hidden>
+        <h2>ออกแบบโมบเล็ต</h2>
+        <p class="lead">ตัวละครวาดสดด้วยโค้ดทั้งหมด ไม่มีไฟล์ภาพ จึงผสมได้หลายร้อยแบบ</p>
+        <div class="moblet-edit">
+          <canvas id="mobletPreview" width="300" height="300"></canvas>
+          <div class="field" style="gap:10px">
+            <label class="field"><span>ชื่อ</span><input id="mbName" type="text" maxlength="24"></label>
+            <div class="grid2">
+              <label class="field"><span>ทรงตัว</span><select id="mbBody"></select></label>
+              <label class="field"><span>ดวงตา</span><select id="mbEyes"></select></label>
+              <label class="field"><span>บนหัว</span><select id="mbCrest"></select></label>
+              <label class="field"><span>ลาย</span><select id="mbPattern"></select></label>
+            </div>
+            <label class="field"><span>สี</span><input id="mbHue" type="range" min="0" max="359"></label>
+          </div>
+        </div>
+        <div class="row"><button class="btn" id="mbRandom">สุ่มโมบเล็ตใหม่</button></div>
+      </div>
+
+      <div class="pane" data-pane="train" hidden>
+        <h2>ฝึก AI</h2>
+        <p class="lead">โมบเล็ตลองเดินมั่วก่อน แล้วค่อยๆ จำว่าทางไหนได้คะแนน (Reinforcement Learning แบบตาราง Q)</p>
+        <div class="grid2 creator-only">
+          <label class="field"><span>วิธีเรียนรู้</span><select id="hpAlgo"><option value="q">Q-learning</option><option value="sarsa">SARSA</option></select></label>
+          <label class="field"><span>รอบต่อครั้ง</span><select id="hpBatch"><option>200</option><option selected>1000</option><option>5000</option></select></label>
+          <label class="field"><span>อัตราเรียนรู้ α</span><input id="hpAlpha" type="number" step="0.05" min="0.01" max="1"></label>
+          <label class="field"><span>มองอนาคต γ</span><input id="hpGamma" type="number" step="0.01" min="0.5" max="0.999"></label>
+          <label class="field"><span>ลดการสุ่ม ต่อรอบ</span><input id="hpDecay" type="number" step="0.001" min="0.9" max="0.9999"></label>
+          <label class="field"><span>สุ่มน้อยสุด ε</span><input id="hpEpsMin" type="number" step="0.01" min="0" max="0.5"></label>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="trainBtn">เริ่มฝึก</button>
+          <button class="btn" id="watchBtn">ดู AI เล่น</button>
+          <button class="btn ghost creator-only" id="resetBrain">ล้างสมอง</button>
+        </div>
+        <div class="progress" aria-hidden="true"><i id="trainBar"></i></div>
+        <div class="stats">
+          <div class="stat"><span>รอบที่ฝึก</span><b id="stEp">0</b></div>
+          <div class="stat"><span>การสุ่ม ε</span><b id="stEps">1.00</b></div>
+          <div class="stat"><span>ชนะ 100 รอบหลัง</span><b id="stWin">0%</b></div>
+          <div class="stat"><span>สถานะที่จำ</span><b id="stStates">0</b></div>
+        </div>
+        <canvas class="chart" id="chart" aria-label="กราฟผลการฝึก"></canvas>
+        <p class="hint">เส้นน้ำเงิน = คะแนนเฉลี่ยต่อรอบ · เส้นส้ม = อัตราชนะ (แกนขวา)</p>
+      </div>
+
+      <div class="pane" data-pane="play" hidden>
+        <h2>เล่นเอง</h2>
+        <p class="lead">ใช้ลูกศรหรือ W A S D ถ้าเปิดโหมดแข่ง AI จะเดินพร้อมคุณเป็นเงาจางๆ</p>
+        <div class="row">
+          <label class="row"><input type="checkbox" id="raceAI" checked> แข่งกับ AI</label>
+          <button class="btn primary" id="playBtn">เริ่มใหม่</button>
+        </div>
+        <div class="dpad" id="dpad">
+          <button class="u" data-a="0" aria-label="ขึ้น">▲</button>
+          <button class="l" data-a="3" aria-label="ซ้าย">◀</button>
+          <button class="d" data-a="2" aria-label="ลง">▼</button>
+          <button class="r" data-a="1" aria-label="ขวา">▶</button>
+        </div>
+        <p class="result" id="playResult"></p>
+      </div>
+
+      <div class="pane" data-pane="share" hidden>
+        <h2>แชร์ผลงาน</h2>
+        <div class="grid2">
+          <label class="field"><span>ชื่อเกม</span><input id="projTitle" type="text" maxlength="60"></label>
+          <label class="field"><span>ผู้สร้าง</span><input id="projCreator" type="text" maxlength="80"></label>
+        </div>
+        <label class="row"><input type="checkbox" id="incBrain" checked> แนบสมอง AI ที่ฝึกแล้วไปด้วย</label>
+        <div class="row">
+          <button class="btn primary" id="exportGame">ส่งออกเป็นเกม .html</button>
+          <button class="btn" id="exportJson">ดาวน์โหลดโปรเจกต์ .json</button>
+          <button class="btn" id="copyJson">คัดลอก JSON</button>
+        </div>
+        <p class="note">ปุ่มดาวน์โหลดทำงานเมื่อเปิดจาก GitHub Pages หรือไฟล์ในเครื่อง ถ้าเปิดในหน้าตัวอย่างนี้ให้ใช้ "คัดลอก JSON" แทน</p>
+        <div class="field">
+          <span>นำเข้าโปรเจกต์</span>
+          <input id="importFile" type="file" accept=".json,application/json">
+          <textarea id="importText" placeholder="หรือวาง JSON ของโปรเจกต์ที่นี่"></textarea>
+          <div class="row"><button class="btn" id="importBtn">นำเข้าจากข้อความ</button></div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <footer>
+    <span>Moblet Forge · สร้างและออกแบบโดย <b>นริสันต์ นาคะเกศ</b> (Narisan Nakakes) · MIT License</span>
+    <a href="https://github.com/narisunt-ctrl/moblet-forge" target="_blank" rel="noopener">github.com/narisunt-ctrl/moblet-forge</a>
+  </footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+<!--MF-SCRIPTS-->

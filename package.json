@@ -1,0 +1,13 @@
+{
+  "name": "moblet-forge",
+  "version": "1.0.0",
+  "description": "No-code browser game maker where your event rules become the reward function for reinforcement-learning characters.",
+  "author": "Narisan Nakakes (นริสันต์ นาคะเกศ)",
+  "license": "MIT",
+  "repository": "github:narisunt-ctrl/moblet-forge",
+  "keywords": ["game-maker", "reinforcement-learning", "q-learning", "sarsa", "no-code", "canvas"],
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test/train.test.js"
+  }
+}
